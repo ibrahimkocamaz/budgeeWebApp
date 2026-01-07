@@ -1,0 +1,94 @@
+:root {
+  /* Core Backgrounds */
+  --bg-app: #12151A;
+  /* appBackground */
+  --bg-card: #1A1F26;
+  /* primary (appears to be card/surface color) */
+  --bg-overlay: rgba(18, 21, 26, 0.8);
+
+  /* Brand Colors */
+  --color-brand: #0aac35;
+  /* secondary */
+  --color-brand-hover: #088a2a;
+  --color-accent-red: #a82319;
+  /* secondaryRed */
+
+  /* Text Colors */
+  --text-main: #ffffff;
+  /* whiteText */
+  --text-inverse: #000000;
+  /* darkText */
+  --text-muted: #757575;
+  /* disabled */
+  --text-placeholder: #9e9e9e;
+
+  /* Functional Text */
+  --text-income: #00E676;
+  --text-expense: #F44336;
+
+  /* UI Elements */
+  --color-divider: #2A2F37;
+  --color-input-border: #252B33;
+  --color-cancel: #E53935;
+
+  /* Status */
+  --color-error: #cf6679;
+  --color-success: #4CAF50;
+  --color-warning: #ffab00;
+  --color-info: #2196f3;
+
+  /* Fonts */
+  --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+[data-theme='light'] {
+  /* Core Backgrounds */
+  --bg-app: #F0F2F5;
+  --bg-card: #FFFFFF;
+  --bg-overlay: rgba(255, 255, 255, 0.9);
+
+  /* Text Colors */
+  --text-main: #1A1F26;
+  --text-inverse: #FFFFFF;
+  --text-muted: #64748B;
+  --text-placeholder: #94A3B8;
+
+  /* UI Elements */
+  --color-divider: #E2E8F0;
+  --color-input-border: #E2E8F0;
+
+  /* Brand Adjustments for Contrast if needed */
+  /* Keeping brand colors same for consistency unless requested otherwise */
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-app);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-input-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
