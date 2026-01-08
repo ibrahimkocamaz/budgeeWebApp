@@ -56,7 +56,10 @@ export const translations = {
             dateLabel: "Date",
             merchantLabel: "Merchant / Notes (Optional)",
             merchantPlaceholder: "e.g. Whole Foods",
-            save: "Save Transaction"
+            save: "Save Transaction",
+            single: "Single",
+            recurring: "Recurring",
+            installment: "Installment"
         },
         currencies: {
             USD: "United States Dollar",
@@ -125,7 +128,10 @@ export const translations = {
             dateLabel: "Fecha",
             merchantLabel: "Comercio / Notas (Opcional)",
             merchantPlaceholder: "ej. Mercadona",
-            save: "Guardar Transacción"
+            save: "Guardar Transacción",
+            single: "Única",
+            recurring: "Recurrente",
+            installment: "A Plazos"
         },
         currencies: {
             USD: "Dólar Estadounidense",
@@ -194,7 +200,10 @@ export const translations = {
             dateLabel: "Data",
             merchantLabel: "Estabelecimento / Notas (Opcional)",
             merchantPlaceholder: "ex. Pingo Doce",
-            save: "Salvar Transação"
+            save: "Salvar Transação",
+            single: "Única",
+            recurring: "Recorrente",
+            installment: "Parcelado"
         },
         currencies: {
             USD: "Dólar Americano",
@@ -263,7 +272,10 @@ export const translations = {
             dateLabel: "Tarih",
             merchantLabel: "Satıcı / Notlar (İsteğe bağlı)",
             merchantPlaceholder: "ör. Migros",
-            save: "İşlemi Kaydet"
+            save: "İşlemi Kaydet",
+            single: "Tek Seferlik",
+            recurring: "Düzenli",
+            installment: "Taksitli"
         },
         currencies: {
             USD: "Amerikan Doları",

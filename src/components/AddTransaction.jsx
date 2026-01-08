@@ -1,34 +1,73 @@
+
 import React, { useState } from 'react';
-import { ArrowLeft, Save } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { ArrowLeft, Save, Plus, Trash2, TrendingUp, TrendingDown, CircleDot, Repeat, CalendarRange, ChevronLeft } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { useCategories } from '../context/CategoriesContext';
 
 const AddTransaction = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const [type, setType] = useState('expense'); // 'income' or 'expense'
-  const [formData, setFormData] = useState({
-    amount: '',
-    title: '',
-    category: '',
-    date: new Date().toISOString().split('T')[0],
-    merchant: ''
-  });
+  const { getCategoriesByType } = useCategories();
 
-  const categories = [
-    'Food', 'Rent', 'Transport', 'Utilities', 'Entertainment', 'Health', 'Shopping', 'Salary', 'Investment', 'Other'
-  ];
+  // Memoize categories to avoid re-fetching on every render if possible, 
+  // but context provided functions usually return array.
+  const expenseCategories = getCategoriesByType('expense');
+  const incomeCategories = getCategoriesByType('income');
+
+  const [transactions, setTransactions] = useState([
+    { id: 1, type: 'expense', mode: 'single', date: new Date().toISOString().split('T')[0], category: '', title: '', amount: '', merchant: '' }
+  ]);
+  const [activeModeRowId, setActiveModeRowId] = useState(null);
+
+  const handleAddRow = () => {
+    setTransactions([
+      ...transactions,
+      {
+        id: Date.now(),
+        type: 'expense',
+        mode: 'single',
+        date: new Date().toISOString().split('T')[0],
+        category: '',
+        title: '',
+        amount: '',
+        merchant: ''
+      }
+    ]);
+  };
+
+  const handleRemoveRow = (id) => {
+    if (transactions.length > 1) {
+      setTransactions(transactions.filter(t => t.id !== id));
+    }
+  };
+
+  const handleChange = (id, field, value) => {
+    setTransactions(transactions.map(t => {
+      if (t.id === id) {
+        const updates = { [field]: value };
+        // Reset category if type changes
+        if (field === 'type') {
+          updates.category = '';
+        }
+        return { ...t, ...updates };
+      }
+      return t;
+    }));
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Submitting Transaction:", { ...formData, type });
-    // Here we would normally save to state/backend
-    navigate('/'); // Go back to dashboard
+    console.log("Submitting Batch Transactions:", transactions);
+    // Here we would normally save all to state/backend
+    navigate('/');
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const getTotalAmount = () => {
+    return transactions.reduce((acc, curr) => {
+      const val = parseFloat(curr.amount) || 0;
+      return curr.type === 'income' ? acc + val : acc - val;
+    }, 0);
   };
 
   return (
@@ -38,241 +77,502 @@ const AddTransaction = () => {
           <ArrowLeft size={24} />
         </Link>
         <h2>{t('addTransaction.title')}</h2>
-        <div style={{ width: 24 }}></div> {/* Spacer for centering */}
+        <div style={{ width: 24 }}></div>
       </div>
 
-      <div className="type-toggle">
-        <button
-          className={`toggle-btn ${type === 'expense' ? 'active expense' : ''}`}
-          onClick={() => setType('expense')}
-        >
-          {t('addTransaction.expense')}
-        </button>
-        <button
-          className={`toggle-btn ${type === 'income' ? 'active income' : ''}`}
-          onClick={() => setType('income')}
-        >
-          {t('addTransaction.income')}
-        </button>
-      </div>
+      <form onSubmit={handleSubmit} className="batch-form">
+        <div className="transactions-list">
+          {transactions.map((tx, index) => (
+            <div key={tx.id} className="transaction-row card">
+              <div className="row-header">
+                <span className="row-number">#{index + 1}</span>
+                <div className="row-header-actions">
+                  <div className="mode-tabs-small">
+                    {activeModeRowId === tx.id ? (
+                      <>
+                        <button
+                          type="button"
+                          className={`mode-btn-small ${tx.mode === 'single' ? 'active' : ''}`}
+                          onClick={() => { handleChange(tx.id, 'mode', 'single'); setActiveModeRowId(null); }}
+                        >
+                          {t('addTransaction.single') || 'Single'}
+                        </button>
+                        <button
+                          type="button"
+                          className={`mode-btn-small ${tx.mode === 'recurring' ? 'active' : ''}`}
+                          onClick={() => { handleChange(tx.id, 'mode', 'recurring'); setActiveModeRowId(null); }}
+                        >
+                          {t('addTransaction.recurring') || 'Recurring'}
+                        </button>
+                        <button
+                          type="button"
+                          className={`mode-btn-small ${tx.mode === 'installment' ? 'active' : ''}`}
+                          onClick={() => { handleChange(tx.id, 'mode', 'installment'); setActiveModeRowId(null); }}
+                        >
+                          {t('addTransaction.installment') || 'Installment'}
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        className="mode-btn-small active dropdown-trigger"
+                        onClick={() => setActiveModeRowId(tx.id)}
+                      >
+                        <ChevronLeft size={14} style={{ marginRight: 4, opacity: 0.7 }} />
+                        {t(`addTransaction.${tx.mode}`) || tx.mode}
+                      </button>
+                    )}
+                  </div>
 
-      <form onSubmit={handleSubmit} className="transaction-form">
-        <div className="form-group amount-group">
-          <label>{t('addTransaction.amountLabel')}</label>
-          <div className="amount-input-wrapper">
-            <span className="currency-symbol">$</span>
-            <input
-              type="number"
-              name="amount"
-              value={formData.amount}
-              onChange={handleChange}
-              placeholder={t('addTransaction.amountPlaceholder')}
-              step="0.01"
-              required
-              autoFocus
-            />
+                  {transactions.length > 1 && (
+                    <button
+                      type="button"
+                      className="delete-btn"
+                      onClick={() => handleRemoveRow(tx.id)}
+                      title="Remove row"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="row-grid">
+                {/* Type Toggle */}
+                <div className="field-group type-select">
+                  <div className="toggle-pill">
+                    <button
+                      type="button"
+                      className={`pill-btn ${tx.type === 'expense' ? 'active expense' : ''}`}
+                      onClick={() => handleChange(tx.id, 'type', 'expense')}
+                      title={t('addTransaction.expense')}
+                    >
+                      <TrendingDown size={16} />
+                    </button>
+                    <button
+                      type="button"
+                      className={`pill-btn ${tx.type === 'income' ? 'active income' : ''}`}
+                      onClick={() => handleChange(tx.id, 'type', 'income')}
+                      title={t('addTransaction.income')}
+                    >
+                      <TrendingUp size={16} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Date */}
+                <div className="field-group date-input">
+                  <input
+                    type="date"
+                    value={tx.date}
+                    onChange={(e) => handleChange(tx.id, 'date', e.target.value)}
+                    required
+                  />
+                </div>
+
+                {/* Category */}
+                <div className="field-group">
+                  <select
+                    value={tx.category}
+                    onChange={(e) => handleChange(tx.id, 'category', e.target.value)}
+                    required
+                    className={!tx.category ? 'placeholder' : ''}
+                  >
+                    <option value="" disabled>{t('addTransaction.selectCategory')}</option>
+                    {(tx.type === 'expense' ? expenseCategories : incomeCategories).map(cat => (
+                      <option key={cat.id} value={cat.name.toLowerCase()}>{cat.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Title */}
+                <div className="field-group flex-2">
+                  <input
+                    type="text"
+                    placeholder={t('addTransaction.titlePlaceholder')}
+                    value={tx.title}
+                    onChange={(e) => handleChange(tx.id, 'title', e.target.value)}
+                    required
+                  />
+                </div>
+
+                {/* Amount */}
+                <div className="field-group amount-input">
+                  <span className="scurrency">$</span>
+                  <input
+                    type="number"
+                    placeholder="0.00"
+                    value={tx.amount}
+                    onChange={(e) => handleChange(tx.id, 'amount', e.target.value)}
+                    step="0.01"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="form-actions">
+          <button type="button" className="btn-secondary add-row-btn" onClick={handleAddRow}>
+            <Plus size={20} />
+            Add Another
+          </button>
+        </div>
+
+        <div className="footer-summary">
+          <div className="total-preview">
+            <span>Net Change:</span>
+            <span className={getTotalAmount() >= 0 ? 'pos' : 'neg'}>
+              {getTotalAmount() >= 0 ? '+' : ''}{getTotalAmount().toFixed(2)}
+            </span>
           </div>
+          <button type="submit" className="submit-btn-large">
+            <Save size={20} />
+            {t('addTransaction.save')} {transactions.length} Item{transactions.length !== 1 ? 's' : ''}
+          </button>
         </div>
-
-        <div className="form-group">
-          <label>{t('addTransaction.titleLabel')}</label>
-          <input
-            type="text"
-            name="title"
-            value={formData.title}
-            onChange={handleChange}
-            placeholder={t('addTransaction.titlePlaceholder')}
-            required
-          />
-        </div>
-
-        <div className="form-group">
-          <label>{t('addTransaction.categoryLabel')}</label>
-          <select name="category" value={formData.category} onChange={handleChange} required>
-            <option value="" disabled>{t('addTransaction.selectCategory')}</option>
-            {categories.map(cat => (
-              <option key={cat} value={cat}>{cat}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="form-group">
-          <label>{t('addTransaction.dateLabel')}</label>
-          <input
-            type="date"
-            name="date"
-            value={formData.date}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <div className="form-group">
-          <label>{t('addTransaction.merchantLabel')}</label>
-          <input
-            type="text"
-            name="merchant"
-            value={formData.merchant}
-            onChange={handleChange}
-            placeholder={t('addTransaction.merchantPlaceholder')}
-          />
-        </div>
-
-        <button type="submit" className={`submit-btn ${type}`}>
-          <Save size={20} />
-          {t('addTransaction.save')}
-        </button>
       </form>
 
       <style>{`
-        .add-transaction-container {
-          max-width: 600px;
-          margin: 0 auto;
-          padding: 1rem;
-        }
+                .add-transaction-container {
+                    max-width: 100%;
+                    margin: 0;
+                    padding: 1.5rem 2rem;
+                    padding-bottom: 100px;
+                }
 
-        .header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 2rem;
-        }
+                .header {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    margin-bottom: 2rem;
+                }
 
-        .back-btn {
-          color: var(--text-main);
-          padding: 0.5rem;
-          border-radius: 50%;
-          transition: background-color 0.2s;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
+                .header h2 {
+                    font-size: 1.25rem;
+                    font-weight: 600;
+                }
 
-        .back-btn:hover {
-          background-color: rgba(255,255,255,0.1);
-        }
+                .back-btn {
+                    color: var(--text-main);
+                    padding: 0.5rem;
+                    border-radius: 50%;
+                    transition: background-color 0.2s;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
 
-        .header h2 {
-          font-size: 1.25rem;
-          font-weight: 600;
-        }
+                .back-btn:hover {
+                    background-color: rgba(255,255,255,0.1);
+                }
 
-        /* Type Toggle */
-        .type-toggle {
-          display: flex;
-          background-color: var(--bg-card);
-          padding: 0.25rem;
-          border-radius: 0.75rem;
-          margin-bottom: 2rem;
-          border: 1px solid var(--color-divider);
-        }
+                /* Batch Form Styles */
+                .transactions-list {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0;
+                    background-color: var(--bg-card);
+                    border: 1px solid var(--color-divider);
+                    border-radius: 12px;
+                    overflow: hidden; /* Clip corners */
+                }
 
-        .toggle-btn {
-          flex: 1;
-          padding: 0.75rem;
-          border: none;
-          background: none;
-          color: var(--text-muted);
-          border-radius: 0.5rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
+                .transaction-row {
+                    background-color: transparent;
+                    border: none;
+                    border-bottom: 1px solid var(--color-divider);
+                    border-radius: 0;
+                    padding: 1.25rem;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.75rem;
+                    transition: background-color 0.2s;
+                }
+                
+                .transaction-row:last-child {
+                    border-bottom: none;
+                }
+                
+                /* Remove the hover border effect since we don't have borders anymore */
+                .transaction-row:hover {
+                    background-color: rgba(255, 255, 255, 0.02);
+                }
 
-        .toggle-btn.active.expense {
-          background-color: var(--color-accent-red);
-          color: white;
-        }
+                .row-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    font-size: 0.75rem;
+                    color: var(--text-muted);
+                    margin-bottom: 0.5rem;
+                }
 
-        .toggle-btn.active.income {
-          background-color: var(--color-brand);
-          color: white;
-        }
+                .row-number {
+                    font-weight: 600;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
 
-        /* Form Styles */
-        .transaction-form {
-          display: flex;
-          flex-direction: column;
-          gap: 1.5rem;
-        }
+                .delete-btn {
+                    background: none;
+                    border: none;
+                    color: var(--text-muted);
+                    cursor: pointer;
+                    padding: 4px;
+                    border-radius: 4px;
+                }
+                
+                .delete-btn:hover {
+                    color: var(--color-accent-red);
+                    background-color: rgba(220, 38, 38, 0.1);
+                }
 
-        .form-group {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-        }
+                .row-header-actions {
+                    display: flex;
+                    align-items: center;
+                    gap: 1rem;
+                }
 
-        .form-group label {
-          font-size: 0.875rem;
-          color: var(--text-muted);
-          font-weight: 500;
-        }
+                .mode-tabs-small {
+                    display: flex;
+                    gap: 4px;
+                    background-color: var(--bg-app);
+                    padding: 2px;
+                    border-radius: 6px;
+                    border: 1px solid var(--color-input-border);
+                }
 
-        .form-group input, .form-group select {
-          background-color: var(--bg-card);
-          border: 1px solid var(--color-input-border);
-          padding: 0.75rem 1rem;
-          border-radius: 0.75rem;
-          color: var(--text-main);
-          font-size: 1rem;
-          outline: none;
-          transition: border-color 0.2s;
-        }
+                .mode-btn-small {
+                    border: none;
+                    background: none;
+                    padding: 4px 10px;
+                    font-size: 0.75rem;
+                    font-weight: 500;
+                    color: var(--text-muted);
+                    cursor: pointer;
+                    border-radius: 4px;
+                    transition: all 0.2s;
+                }
 
-        .form-group input:focus, .form-group select:focus {
-          border-color: var(--color-brand);
-        }
+                .mode-btn-small:hover {
+                    color: var(--text-main);
+                }
 
-        /* Amount Input Special Styling */
-        .amount-input-wrapper {
-          position: relative;
-          display: flex;
-          align-items: center;
-        }
+                .mode-btn-small.active {
+                    background-color: var(--color-brand);
+                    color: white;
+                    font-weight: 600;
+                }
 
-        .currency-symbol {
-          position: absolute;
-          left: 1rem;
-          font-size: 1.25rem;
-          color: var(--text-muted);
-          font-weight: 600;
-        }
+                .mode-btn-small.dropdown-trigger {
+                    display: flex;
+                    align-items: center;
+                    padding-left: 6px; /* Adjusted padding for left icon */
+                    padding-right: 10px;
+                }
 
-        .amount-group input {
-          font-size: 1.5rem;
-          padding-left: 2rem;
-          font-weight: 700;
-          width: 100%;
-        }
+                /* Mobile Adjustment for Header */
+                @media (max-width: 600px) {
+                    .row-header {
+                        flex-direction: column;
+                        align-items: flex-start;
+                        gap: 0.5rem;
+                    }
+                    .row-header-actions {
+                        width: 100%;
+                        justify-content: space-between;
+                    }
+                }
 
-        .submit-btn {
-          margin-top: 1rem;
-          padding: 1rem;
-          border: none;
-          border-radius: 0.75rem;
-          color: white;
-          font-weight: 600;
-          font-size: 1rem;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.5rem;
-          transition: opacity 0.2s;
-        }
-        
-        .submit-btn:hover {
-          opacity: 0.9;
-        }
+                .row-grid {
+                    display: grid;
+                    grid-template-columns: 100px 135px 160px 1fr 120px; /* Removed mode column */
+                    gap: 0.75rem;
+                    align-items: center;
+                }
 
-        .submit-btn.expense {
-          background-color: var(--color-accent-red);
-        }
+                .field-group {
+                    display: flex;
+                    flex-direction: column;
+                }
+                
+                .field-group.flex-2 {
+                    flex: 1; /* Title takes remaining space */
+                }
 
-        .submit-btn.income {
-          background-color: var(--color-brand);
-        }
-      `}</style>
+                .field-group input, .field-group select {
+                    background-color: var(--bg-app);
+                    border: 1px solid var(--color-input-border);
+                    padding: 0.6rem;
+                    border-radius: 8px;
+                    color: var(--text-main);
+                    font-size: 0.9rem;
+                    width: 100%;
+                    outline: none;
+                }
+
+                .field-group input:focus, .field-group select:focus {
+                    border-color: var(--color-brand);
+                }
+
+                /* Type Toggle Pill */
+                .toggle-pill {
+                    display: flex;
+                    background-color: var(--bg-app);
+                    border-radius: 8px;
+                    padding: 2px;
+                    border: 1px solid var(--color-input-border);
+                }
+
+                .pill-btn {
+                    flex: 1;
+                    border: none;
+                    background: none;
+                    padding: 6px; /* Increased padding slightly for hit area since icon is small */
+                    font-size: 0.8rem;
+                    font-weight: 600;
+                    border-radius: 6px;
+                    color: var(--text-muted);
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                .pill-btn.active.expense {
+                    background-color: var(--color-accent-red);
+                    color: white;
+                }
+                
+                .pill-btn.active.income {
+                    background-color: var(--color-brand);
+                    color: white;
+                }
+
+                /* Amount Input */
+                .amount-input {
+                    position: relative;
+                }
+                
+                .amount-input input {
+                    padding-left: 1.2rem;
+                    font-weight: 600;
+                }
+
+                .scurrency {
+                    position: absolute;
+                    left: 8px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    font-size: 0.8rem;
+                    color: var(--text-muted);
+                }
+
+                /* Actions */
+                .form-actions {
+                    margin-top: 1.5rem;
+                    margin-bottom: 3rem; /* Added spacing from footer */
+                    display: flex;
+                    justify-content: center;
+                }
+
+                .add-row-btn {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 0.75rem 1.5rem;
+                    background-color: transparent;
+                    border: 1px dashed var(--color-divider);
+                    color: var(--text-muted);
+                    border-radius: 8px;
+                    cursor: pointer;
+                    font-weight: 500;
+                    transition: all 0.2s;
+                    width: 100%;
+                    justify-content: center;
+                }
+
+                .add-row-btn:hover {
+                    border-color: var(--color-brand);
+                    color: var(--color-brand);
+                    background-color: rgba(0, 200, 83, 0.05); /* Brand tint */
+                    border-style: solid;
+                }
+
+                /* Footer */
+                .footer-summary {
+                    position: sticky;
+                    bottom: 1.5rem;
+                    background-color: var(--bg-card);
+                    padding: 1rem 1.5rem;
+                    border: 1px solid var(--color-divider);
+                    border-radius: 12px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    z-index: 50;
+                }
+                
+
+
+                .total-preview {
+                    display: flex;
+                    flex-direction: column;
+                    font-size: 0.85rem;
+                    color: var(--text-muted);
+                }
+
+                .total-preview span:last-child {
+                    font-size: 1.2rem;
+                    font-weight: 700;
+                }
+                
+                .pos { color: var(--color-success); }
+                .neg { color: var(--text-main); }
+
+                .submit-btn-large {
+                    background-color: var(--color-brand);
+                    color: white;
+                    border: none;
+                    padding: 0.75rem 1.5rem;
+                    border-radius: 8px;
+                    font-weight: 600;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    cursor: pointer;
+                }
+
+                .submit-btn-large:hover {
+                    background-color: var(--color-brand-hover);
+                }
+
+                /* Mobile Responsive */
+                @media (max-width: 900px) {
+                    .row-grid {
+                        grid-template-columns: 1fr 1fr;
+                        grid-template-areas: 
+                            "type date"
+                            "cat cat" /* Category now spans two columns */
+                            "title title"
+                            "amt amt";
+                        gap: 0.75rem;
+                    }
+                    
+                    .type-select { grid-area: type; }
+                    .date-input { grid-area: date; }
+                    /* Mode selector is now outside row-grid */
+                    .field-group:nth-child(3) { grid-area: cat; } /* Category is now the 3rd child in row-grid */
+                    .field-group.flex-2 { grid-area: title; }
+                    .amount-input { grid-area: amt; }
+                    
+                    .add-transaction-container {
+                        padding-bottom: 80px;
+                    }
+                }
+            `}</style>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home, List, PieChart, Settings, LogOut, Wallet, Tags, Repeat, Plus, Globe, Moon, Sun } from 'lucide-react';
+import { Home, List, PieChart, Settings, LogOut, Wallet, Tags, Repeat, Plus, Globe, Moon, Sun, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
@@ -11,6 +11,7 @@ const Layout = ({ children }) => {
   const { isDark, toggleTheme } = useTheme();
   const isActive = (path) => location.pathname === path;
   const [showModal, setShowModal] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   const getPageTitle = (path) => {
     switch (path) {
@@ -29,47 +30,55 @@ const Layout = ({ children }) => {
   return (
     <div className="layout">
       {/* Sidebar */}
-      <aside className="sidebar">
+      <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
+        <button
+          className="collapse-btn-floating"
+          onClick={() => setCollapsed(!collapsed)}
+          aria-label="Toggle Sidebar"
+        >
+          {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+        </button>
+
         <div className="logo-container">
           <img src="/assets/budgee_icon.png" alt="Budgee Logo" className="logo-icon" />
-          <h1 className="logo-text">Budgee</h1>
+          {!collapsed && <h1 className="logo-text">Budgee</h1>}
         </div>
 
         <nav className="nav-menu">
-          <Link to="/" className={`nav-item ${isActive('/') ? 'active' : ''}`}>
+          <Link to="/" className={`nav-item ${isActive('/') ? 'active' : ''}`} title={collapsed ? t('sidebar.dashboard') : ''}>
             <Home size={20} />
-            <span>{t('sidebar.dashboard')}</span>
+            {!collapsed && <span>{t('sidebar.dashboard')}</span>}
           </Link>
-          <Link to="/transactions" className={`nav-item ${isActive('/transactions') ? 'active' : ''}`}>
+          <Link to="/transactions" className={`nav-item ${isActive('/transactions') ? 'active' : ''}`} title={collapsed ? t('sidebar.transactions') : ''}>
             <List size={20} />
-            <span>{t('sidebar.transactions')}</span>
+            {!collapsed && <span>{t('sidebar.transactions')}</span>}
           </Link>
-          <Link to="/budgets" className={`nav-item ${isActive('/budgets') ? 'active' : ''}`}>
+          <Link to="/budgets" className={`nav-item ${isActive('/budgets') ? 'active' : ''}`} title={collapsed ? t('sidebar.budgets') : ''}>
             <PieChart size={20} />
-            <span>{t('sidebar.budgets')}</span>
+            {!collapsed && <span>{t('sidebar.budgets')}</span>}
           </Link>
-          <Link to="/accounts" className={`nav-item ${isActive('/accounts') ? 'active' : ''}`}>
+          <Link to="/accounts" className={`nav-item ${isActive('/accounts') ? 'active' : ''}`} title={collapsed ? t('sidebar.accounts') : ''}>
             <Wallet size={20} />
-            <span>{t('sidebar.accounts')}</span>
+            {!collapsed && <span>{t('sidebar.accounts')}</span>}
           </Link>
-          <Link to="/categories" className={`nav-item ${isActive('/categories') ? 'active' : ''}`}>
+          <Link to="/categories" className={`nav-item ${isActive('/categories') ? 'active' : ''}`} title={collapsed ? t('sidebar.categories') : ''}>
             <Tags size={20} />
-            <span>{t('sidebar.categories')}</span>
+            {!collapsed && <span>{t('sidebar.categories')}</span>}
           </Link>
-          <Link to="/recurring" className={`nav-item ${isActive('/recurring') ? 'active' : ''}`}>
+          <Link to="/recurring" className={`nav-item ${isActive('/recurring') ? 'active' : ''}`} title={collapsed ? t('sidebar.recurring') : ''}>
             <Repeat size={20} />
-            <span>{t('sidebar.recurring')}</span>
+            {!collapsed && <span>{t('sidebar.recurring')}</span>}
           </Link>
         </nav>
 
         <div className="sidebar-footer">
-          <Link to="/settings" className={`nav-item ${isActive('/settings') ? 'active' : ''}`}>
+          <Link to="/settings" className={`nav-item ${isActive('/settings') ? 'active' : ''}`} title={collapsed ? t('sidebar.settings') : ''}>
             <Settings size={20} />
-            <span>{t('sidebar.settings')}</span>
+            {!collapsed && <span>{t('sidebar.settings')}</span>}
           </Link>
-          <a href="#" className="nav-item logout">
+          <a href="#" className="nav-item logout" title={collapsed ? t('sidebar.logout') : ''}>
             <LogOut size={20} />
-            <span>{t('sidebar.logout')}</span>
+            {!collapsed && <span>{t('sidebar.logout')}</span>}
           </a>
         </div>
       </aside>
@@ -79,10 +88,6 @@ const Layout = ({ children }) => {
         <header className="top-bar">
           <h2 className="page-title">{getPageTitle(location.pathname)}</h2>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-            <Link to="/add" className="btn-primary">
-              <Plus size={20} />
-              {t('dashboard.addTransaction')}
-            </Link>
 
             <button
               className="icon-btn"
@@ -111,10 +116,39 @@ const Layout = ({ children }) => {
         </div>
       </main >
 
+      <Link to="/add" className="fab-add-transaction" title={t('dashboard.addTransaction')}>
+        <Plus size={24} />
+      </Link>
+
       {showModal && <LanguageCurrencyModal onClose={() => setShowModal(false)} />}
 
 
       <style>{`
+        /* ... existing styles ... */
+        
+        .fab-add-transaction {
+            position: fixed;
+            bottom: 32px;
+            right: 32px;
+            width: 48px;
+            height: 48px;
+            background-color: var(--color-brand);
+            color: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 100;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .fab-add-transaction:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+            background-color: var(--color-brand-hover);
+        }
+
         .layout {
           display: flex;
           height: 100vh;
@@ -130,6 +164,37 @@ const Layout = ({ children }) => {
           flex-direction: column;
           border-right: 1px solid var(--color-divider);
           padding: 1.5rem;
+          transition: width 0.3s ease;
+          position: relative;
+        }
+
+        .collapse-btn-floating {
+            position: absolute;
+            right: -16px;
+            top: 24px;
+            width: 32px;
+            height: 32px;
+            background-color: var(--bg-card);
+            border: 1px solid var(--color-divider);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-muted);
+            z-index: 10;
+            transition: all 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .collapse-btn-floating:hover {
+            color: var(--text-main);
+            border-color: var(--color-brand);
+        }
+
+        .sidebar.collapsed {
+            width: 80px;
+            padding: 1.5rem 0.75rem;
         }
 
         .logo-container {
@@ -137,17 +202,25 @@ const Layout = ({ children }) => {
           align-items: center;
           gap: 1rem;
           margin-bottom: 3rem;
+          height: 40px; /* Fixed height to prevent jumps */
+          overflow: hidden;
+        }
+        
+        .sidebar.collapsed .logo-container {
+            justify-content: center;
         }
 
         .logo-icon {
           width: 32px;
           height: 32px;
+          min-width: 32px; /* Prevent shrink */
         }
 
         .logo-text {
           font-size: 1.25rem;
           font-weight: 700;
           color: var(--color-brand);
+          white-space: nowrap; /* Prevent wrap during transition */
         }
 
         .nav-menu {
@@ -167,6 +240,13 @@ const Layout = ({ children }) => {
           color: var(--text-muted);
           transition: all 0.2s ease;
           font-weight: 500;
+          white-space: nowrap;
+          overflow: hidden;
+        }
+        
+        .sidebar.collapsed .nav-item {
+            justify-content: center;
+            padding: 0.75rem;
         }
 
         .nav-item:hover {
@@ -226,6 +306,15 @@ const Layout = ({ children }) => {
 
         .btn-primary:hover {
           background-color: var(--color-brand-hover);
+        }
+        
+        @media (max-width: 768px) {
+             .add-btn-text {
+                 display: none;
+             }
+             .btn-primary {
+                 padding: 0.75rem;
+             }
         }
 
         .user-profile {

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Filter, ArrowUpRight, ArrowDownRight, RefreshCw, Calendar } from 'lucide-react';
+import { Search, Filter, ArrowUpRight, ArrowDownRight, RefreshCw, Calendar, Edit2, Trash2 } from 'lucide-react';
 import { mockTransactions } from '../data/mockData';
 import { useLanguage } from '../context/LanguageContext';
 import { useCurrency } from '../context/CurrencyContext';
@@ -138,6 +138,15 @@ const Transactions = ({ limit, showControls = true }) => {
                                             {tx.type === 'income' ? '+' : '-'}
                                             {formatAmount(tx.amount)}
                                         </div>
+
+                                        <div className="tx-actions">
+                                            <button className="action-btn edit" title="Edit">
+                                                <Edit2 size={16} />
+                                            </button>
+                                            <button className="action-btn delete" title="Delete">
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
                                     </div>
                                 );
                             })}
@@ -271,6 +280,8 @@ const Transactions = ({ limit, showControls = true }) => {
                     padding: 16px;
                     border-bottom: 1px solid var(--color-divider);
                     transition: background-color 0.2s;
+                    position: relative;
+                    overflow: hidden; /* To keep sliding clean */
                 }
 
                 .transaction-item:last-child {
@@ -335,6 +346,8 @@ const Transactions = ({ limit, showControls = true }) => {
                 .amount {
                     font-weight: 600;
                     font-size: 1rem;
+                    margin-left: auto; /* Push to right */
+                    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                 }
 
                 .amount.positive {
@@ -343,6 +356,51 @@ const Transactions = ({ limit, showControls = true }) => {
 
                 .amount.negative {
                     color: var(--text-main); /* or muted */
+                }
+
+                .tx-actions {
+                    position: absolute;
+                    right: 16px;
+                    top: 50%;
+                    transform: translateY(-50%) translateX(20px);
+                    display: flex;
+                    gap: 8px;
+                    opacity: 0;
+                    pointer-events: none;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                }
+
+                .transaction-item:hover .amount {
+                    transform: translateX(-70px);
+                }
+
+                .transaction-item:hover .tx-actions {
+                    opacity: 1;
+                    transform: translateY(-50%) translateX(0);
+                    pointer-events: auto;
+                }
+
+                .action-btn {
+                    background: none;
+                    border: none;
+                    color: var(--text-muted);
+                    cursor: pointer;
+                    padding: 6px;
+                    border-radius: 6px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: all 0.2s;
+                }
+
+                .action-btn:hover {
+                    background-color: rgba(255,255,255,0.1);
+                    color: var(--text-main);
+                }
+
+                .action-btn.delete:hover {
+                    background-color: rgba(220, 38, 38, 0.1);
+                    color: var(--color-accent-red);
                 }
 
                 .empty-state {
