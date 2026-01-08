@@ -1,41 +1,12 @@
-import { Moon, Lock, ChevronRight, Sun } from 'lucide-react';
-import { useTheme } from '../context/ThemeContext';
+import { Lock, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 const Settings = () => {
-    const { isDark, toggleTheme } = useTheme();
     const { t } = useLanguage();
 
     return (
         <div className="settings-container">
             <h2 className="settings-title">{t('settings.title')}</h2>
-
-            {/* Appearance Section */}
-            <section className="settings-section">
-                <h3 className="section-title">{t('settings.appearance')}</h3>
-                <div className="settings-card">
-                    <div className="settings-item">
-                        <div className="item-left">
-                            <div className="icon-circle">
-                                {isDark ? <Moon size={20} /> : <Sun size={20} />}
-                            </div>
-                            <span>{t('settings.darkMode')}</span>
-                        </div>
-                        <div className="item-right">
-                            <label className="switch">
-                                <input
-                                    type="checkbox"
-                                    checked={isDark}
-                                    onChange={toggleTheme}
-                                />
-                                <span className="slider round"></span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-
 
             {/* Security Section */}
             <section className="settings-section">

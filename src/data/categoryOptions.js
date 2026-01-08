@@ -29,27 +29,33 @@ export const availableColors = [
 ];
 
 // Mapping of ID to Lucide Component
+// Mapping of ID to Lucide Component
 export const categoryIcons = {
     'food': { icon: Utensils, label: 'Food' },
+    'groceries': { icon: Apple, label: 'Groceries' }, // Alias default mock
     'apple': { icon: Apple, label: 'Groceries' },
     'coffee': { icon: Coffee, label: 'Coffee' },
     'wine': { icon: Wine, label: 'Drinks' },
     'bus': { icon: Bus, label: 'Bus' },
     'train': { icon: Train, label: 'Train' },
     'car': { icon: Car, label: 'Car' },
+    'transport': { icon: Car, label: 'Transport' }, // Alias
     'fuel': { icon: Fuel, label: 'Fuel' },
     'home': { icon: Home, label: 'Housing' },
+    'housing': { icon: Home, label: 'Housing' }, // Alias
     'wifi': { icon: Wifi, label: 'Internet' },
     'zap': { icon: Zap, label: 'Utilities' },
     'heart': { icon: Heart, label: 'Health' },
     'activity': { icon: Activity, label: 'Fitness' },
     'film': { icon: Film, label: 'Entertainment' },
+    'entertainment': { icon: Film, label: 'Entertainment' }, // Alias
     'music': { icon: Music, label: 'Music' },
     'game': { icon: Gamepad2, label: 'Games' },
     'book': { icon: Book, label: 'Books' },
     'tech': { icon: Laptop, label: 'Tech' },
     'mobile': { icon: Smartphone, label: 'Mobile' },
     'finance': { icon: Calculator, label: 'Finance' },
+    'salary': { icon: Calculator, label: 'Salary' }, // Alias
     'job': { icon: Briefcase, label: 'Work' },
     'shopping': { icon: ShoppingBag, label: 'Shopping' },
     'pet': { icon: Dog, label: 'Pets' },
@@ -67,6 +73,14 @@ export const categoryIcons = {
     'security': { icon: Shield, label: 'Security' },
 };
 
-export const getIconComponent = (key) => {
-    return categoryIcons[key]?.icon || Utensils;
+export const getCategoryIcon = (key) => {
+    return categoryIcons[key?.toLowerCase()]?.icon || Utensils;
+}
+
+export const getCategoryColor = (key) => {
+    // Generate a consistent color based on string char code if not found, or use a default
+    // For now, let's map known categories or return a random one from availableColors deterministically
+    if (!key) return availableColors[0];
+    const index = key.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return availableColors[index % availableColors.length];
 }

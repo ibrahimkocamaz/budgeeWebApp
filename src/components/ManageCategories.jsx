@@ -1,25 +1,11 @@
 import React, { useState } from 'react';
 import { Plus, Trash2, Edit2, GripVertical } from 'lucide-react';
 import { categoryIcons } from '../data/categoryOptions';
+import { useCategories } from '../context/CategoriesContext';
 import CategoryForm from './CategoryForm';
 
-// Initial Mock Data derived from user request + defaults
-const initialCategories = [
-    // Income
-    { id: 1, name: 'Salary', iconKey: 'finance', color: '#0aac35', type: 'income' },
-    { id: 2, name: 'Freelance', iconKey: 'tech', color: '#2196f3', type: 'income' },
-    { id: 3, name: 'Investment', iconKey: 'activity', color: '#4ECDC4', type: 'income' },
-
-    // Expense
-    { id: 101, name: 'Food', iconKey: 'food', color: '#FB5607', type: 'expense' },
-    { id: 102, name: 'Groceries', iconKey: 'shopping', color: '#F5B041', type: 'expense' },
-    { id: 103, name: 'Restaurant', iconKey: 'Utensils', color: '#EC7063', type: 'expense' }, // Fallback logic test
-    { id: 104, name: 'Housing', iconKey: 'home', color: '#8E44AD', type: 'expense' },
-    { id: 105, name: 'Transport', iconKey: 'car', color: '#5DADE2', type: 'expense' },
-];
-
 const ManageCategories = () => {
-    const [categories, setCategories] = useState(initialCategories);
+    const { categories, addCategory, updateCategory, deleteCategory } = useCategories();
     const [activeTab, setActiveTab] = useState('expense'); // 'income' | 'expense'
     const [showForm, setShowForm] = useState(false);
     const [editingCategory, setEditingCategory] = useState(null);
@@ -28,7 +14,7 @@ const ManageCategories = () => {
 
     const handleDelete = (id) => {
         if (confirm('Are you sure you want to delete this category?')) {
-            setCategories(prev => prev.filter(c => c.id !== id));
+            deleteCategory(id);
         }
     };
 
@@ -44,9 +30,9 @@ const ManageCategories = () => {
 
     const handleSave = (categoryData) => {
         if (editingCategory) {
-            setCategories(prev => prev.map(c => c.id === categoryData.id ? categoryData : c));
+            updateCategory({ ...categoryData, id: editingCategory.id });
         } else {
-            setCategories(prev => [...prev, categoryData]);
+            addCategory({ ...categoryData, type: activeTab });
         }
         setShowForm(false);
     };

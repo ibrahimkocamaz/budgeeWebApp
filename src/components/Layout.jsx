@@ -1,14 +1,30 @@
 import React, { useState } from 'react';
-import { Home, List, PieChart, Settings, LogOut, Wallet, Tags, Repeat, Plus, Globe } from 'lucide-react';
+import { Home, List, PieChart, Settings, LogOut, Wallet, Tags, Repeat, Plus, Globe, Moon, Sun } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
 import LanguageCurrencyModal from './LanguageCurrencyModal';
 
 const Layout = ({ children }) => {
   const location = useLocation();
   const { t } = useLanguage();
+  const { isDark, toggleTheme } = useTheme();
   const isActive = (path) => location.pathname === path;
   const [showModal, setShowModal] = useState(false);
+
+  const getPageTitle = (path) => {
+    switch (path) {
+      case '/': return t('dashboard.title');
+      case '/transactions': return t('sidebar.transactions');
+      case '/budgets': return t('sidebar.budgets');
+      case '/accounts': return t('sidebar.accounts');
+      case '/categories': return t('sidebar.categories');
+      case '/recurring': return t('sidebar.recurring');
+      case '/settings': return t('settings.title');
+      case '/add': return t('addTransaction.title');
+      default: return 'Budgee';
+    }
+  };
 
   return (
     <div className="layout">
@@ -59,14 +75,22 @@ const Layout = ({ children }) => {
       </aside>
 
       {/* Main Content */}
-      < main className="main-content" >
+      <main className="main-content">
         <header className="top-bar">
-          <h2 className="page-title">{t('dashboard.title')}</h2>
+          <h2 className="page-title">{getPageTitle(location.pathname)}</h2>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
             <Link to="/add" className="btn-primary">
               <Plus size={20} />
               {t('dashboard.addTransaction')}
             </Link>
+
+            <button
+              className="icon-btn"
+              onClick={toggleTheme}
+              title={t('settings.darkMode')}
+            >
+              {isDark ? <Moon size={20} /> : <Sun size={20} />}
+            </button>
 
             <button
               className="icon-btn"
@@ -196,6 +220,8 @@ const Layout = ({ children }) => {
           align-items: center;
           gap: 0.5rem;
           transition: background-color 0.2s;
+          border: none;
+          cursor: pointer;
         }
 
         .btn-primary:hover {

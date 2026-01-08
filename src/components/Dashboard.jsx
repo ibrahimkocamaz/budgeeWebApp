@@ -1,6 +1,9 @@
-import { ArrowUpRight, ArrowDownRight, DollarSign, CreditCard } from 'lucide-react';
-import { mockSummary, mockTransactions } from '../data/mockData';
+import React, { useMemo } from 'react';
+import { ArrowUpRight, ArrowDownRight, DollarSign } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { mockTransactions } from '../data/mockData';
 import SpendingChart from './SpendingChart';
+import Transactions from './Transactions';
 import { useLanguage } from '../context/LanguageContext';
 import { useCurrency } from '../context/CurrencyContext';
 
@@ -8,6 +11,45 @@ import { useCurrency } from '../context/CurrencyContext';
 const Dashboard = () => {
   const { t } = useLanguage();
   const { formatAmount } = useCurrency();
+
+  const summary = useMemo(() => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    return mockTransactions.reduce((acc, tx) => {
+      const txDate = new Date(tx.date);
+      const isCurrentMonth = txDate.getMonth() === currentMonth && txDate.getFullYear() === currentYear;
+      const amount = Number(tx.amount);
+
+      // Total Balance (All time)
+      if (tx.type === 'income') {
+        acc.totalBalance += amount;
+      } else {
+        acc.totalBalance -= amount;
+      }
+
+      // Monthly Stats
+      if (isCurrentMonth) {
+        if (tx.type === 'income') {
+          acc.income += amount;
+        } else {
+          acc.expenses += amount;
+        }
+      }
+
+      return acc;
+    }, { totalBalance: 12500, income: 0, expenses: 0 });
+    // Initial balance offset (e.g. starting balance) or 0. 
+    // If I start at 0, the balance might be negative if history is incomplete.
+    // Let's assume a starting balance of 12500 for the mock user to match the "wealthy" feel of previous screenshots, 
+    // OR just sum the transactions. 
+    // User asked to "get the data from calculated". If I only sum -200 + 4000... 
+    // If the mock data represents ALL history, then 0 is fine.
+    // But `mockTransactions` is just "Recent".
+    // So `totalBalance` should probably stay mock OR be "Starting + Sum".
+    // I will use `12500` as base "Initial Balance" to keep the UI looking realistic (not $0 or negative).
+  }, []);
 
   return (
     <div className="dashboard-container">
@@ -21,7 +63,7 @@ const Dashboard = () => {
               <DollarSign size={20} />
             </div>
           </div>
-          <div className="card-amount">{formatAmount(mockSummary.totalBalance)}</div>
+          <div className="card-amount">{formatAmount(summary.totalBalance)}</div>
           <div className="card-footer">
             <span className="badge positive">+2.5%</span> <span className="text-muted">{t('common.vsLastMonth')}</span>
           </div>
@@ -34,7 +76,7 @@ const Dashboard = () => {
               <ArrowUpRight size={20} />
             </div>
           </div>
-          <div className="card-amount success-text">{formatAmount(mockSummary.monthlyIncome)}</div>
+          <div className="card-amount success-text">{formatAmount(summary.income)}</div>
         </div>
 
         <div className="card expense-card">
@@ -44,7 +86,7 @@ const Dashboard = () => {
               <ArrowDownRight size={20} />
             </div>
           </div>
-          <div className="card-amount error-text">{formatAmount(mockSummary.monthlyExpenses)}</div>
+          <div className="card-amount error-text">{formatAmount(summary.expenses)}</div>
         </div>
       </section>
 
@@ -54,24 +96,11 @@ const Dashboard = () => {
         <section className="transactions-section">
           <div className="section-header">
             <h2>{t('dashboard.recentTransactions')}</h2>
-            <button className="btn-link">{t('dashboard.viewAll')}</button>
+            <Link to="/transactions" className="btn-link">{t('dashboard.viewAll')}</Link>
           </div>
 
-          <div className="transactions-list">
-            {mockTransactions.map((tx) => (
-              <div key={tx.id} className="transaction-item">
-                <div className="tx-icon">
-                  <CreditCard size={20} />
-                </div>
-                <div className="tx-info">
-                  <h4>{tx.title}</h4>
-                  <p>{tx.category} • {tx.merchant}</p>
-                </div>
-                <div className={`tx-amount ${tx.type === 'income' ? 'success-text' : ''}`}>
-                  {tx.type === 'expense' ? '-' : '+'}{formatAmount(Math.abs(tx.amount))}
-                </div>
-              </div>
-            ))}
+          <div className="transactions-list-widget">
+            <Transactions limit={5} showControls={false} />
           </div>
         </section>
 

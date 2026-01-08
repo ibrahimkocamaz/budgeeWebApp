@@ -1,76 +1,117 @@
 export const mockUser = {
   name: "Ibrahim",
-  avatar: "/assets/1.png", // Using the provided screenshot as a placeholder/avatar if suitable, or just for testing
+  avatar: "/assets/1.png",
 };
 
 export const mockSummary = {
-  totalBalance: 12450.00,
-  monthlyIncome: 4200.00,
-  monthlyExpenses: 2800.00,
-  savingsRate: 33, // Percentage
+  totalBalance: 12450.50,
+  monthlyIncome: 4500.00,
+  monthlyExpenses: 1250.00,
+  savings: 3200.50
 };
 
 export const mockTransactions = [
   {
-    id: 1,
-    title: "Grocery Shopping",
-    amount: -120.50,
-    date: "2024-03-10",
-    category: "Food",
-    type: "expense",
-    merchant: "Whole Foods"
+    id: 'tx1',
+    amount: 85.50,
+    category: 'food',
+    date: new Date().toISOString(), // Today
+    description: 'Weekly Groceries',
+    paymentType: 'single',
+    type: 'expense',
+    userId: 'user1'
   },
   {
-    id: 2,
-    title: "Salary Deposit",
-    amount: 3200.00,
-    date: "2024-03-01",
-    category: "Salary",
-    type: "income",
-    merchant: "Tech Corp Inc."
+    id: 'tx1b',
+    amount: 14.00,
+    category: 'transport',
+    date: new Date().toISOString(), // Same day
+    description: 'Taxi to Office',
+    paymentType: 'single',
+    type: 'expense',
+    userId: 'user1'
   },
   {
-    id: 3,
-    title: "Netflix Subscription",
-    amount: -15.99,
-    date: "2024-03-05",
-    category: "Entertainment",
-    type: "expense",
-    merchant: "Netflix"
+    id: 'tx2',
+    amount: 4500.00,
+    category: 'salary',
+    date: new Date(Date.now() - 86400000).toISOString(), // Yesterday
+    description: 'Tech Corp Salary',
+    paymentType: 'single',
+    type: 'income',
+    userId: 'user1'
   },
   {
-    id: 4,
-    title: "Electric Bill",
-    amount: -85.20,
-    date: "2024-03-03",
-    category: "Utilities",
-    type: "expense",
-    merchant: "City Power"
+    id: 'tx3',
+    amount: 45.00,
+    category: 'transport',
+    date: new Date(Date.now() - 86400000 * 2).toISOString(), // 2 days ago
+    description: 'Uber Ride',
+    paymentType: 'single',
+    type: 'expense',
+    userId: 'user1'
   },
   {
-    id: 5,
-    title: "Freelance Project",
-    amount: 500.00,
-    date: "2024-03-08",
-    category: "Income",
-    type: "income",
-    merchant: "Client X"
+    id: 'tx4',
+    amount: 1200.00,
+    category: 'housing',
+    date: new Date(Date.now() - 86400000 * 5).toISOString(),
+    description: 'Rent Payment 5/12',
+    paymentType: 'installment',
+    type: 'expense',
+    recurring: 1,
+    totalRecurringTransactions: 12,
+    recurringTransactionCount: 5, // Current installment number
+    items: {
+      parentTransactionId: 'parent_rent_2026'
+    },
+    userId: 'user1'
   },
   {
-    id: 6,
-    title: "Gym Membership",
-    amount: -45.00,
-    date: "2024-03-02",
-    category: "Health",
-    type: "expense",
-    merchant: "FitGym"
+    id: 'tx5',
+    amount: 15.99,
+    category: 'entertainment',
+    date: new Date(Date.now() - 86400000 * 6).toISOString(),
+    description: 'Spotify Premium',
+    paymentType: 'single',
+    type: 'expense',
+    userId: 'user1'
+  },
+  {
+    id: 'tx6',
+    amount: 150.00,
+    category: 'shopping',
+    date: new Date(Date.now() - 86400000 * 10).toISOString(),
+    description: 'New Sneakers',
+    paymentType: 'single',
+    type: 'expense',
+    userId: 'user1'
+  }
+];
+
+export const mockBudgets = [
+  {
+    id: 'b1',
+    name: 'Groceries',
+    category: 'food',
+    amount: 800.00,
+    period: 'monthly',
+    color: '#FF9800'
+  },
+  {
+    id: 'b2',
+    name: 'Transport',
+    category: 'transport',
+    amount: 300.00,
+    period: 'monthly',
+    color: '#2196F3'
   }
 ];
 
 export const mockSpendingByCategory = [
-  { name: 'Food', value: 450, color: '#0aac35' },
-  { name: 'Rent', value: 1200, color: '#2196f3' },
-  { name: 'Transport', value: 300, color: '#ffab00' },
-  { name: 'Utilities', value: 200, color: '#a82319' },
-  { name: 'Entertainment', value: 150, color: '#9c27b0' },
+  { name: 'Housing', value: 1200, color: '#FF6B6B' },
+  { name: 'Food', value: 350, color: '#4ECDC4' },
+  { name: 'Transport', value: 150, color: '#45B7D1' },
+  { name: 'Shopping', value: 200, color: '#96CEB4' },
+  { name: 'Entertainment', value: 80, color: '#FFEEAD' },
 ];
