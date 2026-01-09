@@ -41,7 +41,21 @@ export const translations = {
             colorLabel: "Color",
             previewLabel: "Preview",
             save: "Save Category",
-            update: "Update Category"
+            update: "Update Category",
+            subtitle: "Customize your income and expense categories",
+            deleteConfirm: "Are you sure you want to delete this category?"
+        },
+        categoryNames: {
+            salary: "Salary",
+            freelance: "Freelance",
+            investment: "Investment",
+            food: "Food",
+            groceries: "Groceries",
+            restaurant: "Restaurant",
+            housing: "Housing",
+            transport: "Transport",
+            entertainment: "Entertainment",
+            shopping: "Shopping"
         },
         addTransaction: {
             title: "Add Transaction",
@@ -68,7 +82,46 @@ export const translations = {
             TRY: "Turkish Lira"
         },
         common: {
-            vsLastMonth: "vs last month"
+            vsLastMonth: "vs last month",
+            items: "items",
+            searchPlaceholder: "Search...",
+            cancel: "Cancel",
+            create: "Create",
+            edit: "Edit",
+            delete: "Delete",
+            save: "Save"
+        },
+        time: {
+            today: "Today",
+            yesterday: "Yesterday",
+            thisMonth: "This Month",
+            thisWeek: "This Week",
+            custom: "Custom",
+            startDate: "Start Date",
+            endDate: "End Date",
+            apply: "Apply"
+        },
+        budgets: {
+            create: "Create Budget",
+            active: "active",
+            emptyTitle: "No budgets yet",
+            emptyDesc: "Create a budget to track your spending.",
+            remaining: "Remaining:",
+            createModalTitle: "Create New Budget",
+            nameLabel: "Budget Name",
+            namePlaceholder: "e.g. Groceries",
+            amountLabel: "Amount",
+            categoryLabel: "Category",
+            selectCategory: "Select Category",
+            periodLabel: "Period",
+            periods: {
+                monthly: "Monthly",
+                weekly: "Weekly",
+                yearly: "Yearly"
+            }
+        },
+        transactions: {
+            emptyTitle: "No transactions found"
         }
     },
     es: {
@@ -113,7 +166,21 @@ export const translations = {
             colorLabel: "Color",
             previewLabel: "Vista Previa",
             save: "Guardar Categoría",
-            update: "Actualizar Categoría"
+            update: "Actualizar Categoría",
+            subtitle: "Personaliza tus categorías de ingresos y gastos",
+            deleteConfirm: "¿Estás seguro de que quieres eliminar esta categoría?"
+        },
+        categoryNames: {
+            salary: "Salario",
+            freelance: "Freelance",
+            investment: "Inversión",
+            food: "Comida",
+            groceries: "Supermercado",
+            restaurant: "Restaurante",
+            housing: "Vivienda",
+            transport: "Transporte",
+            entertainment: "Entretenimiento",
+            shopping: "Compras"
         },
         addTransaction: {
             title: "Añadir Transacción",
@@ -140,7 +207,46 @@ export const translations = {
             TRY: "Lira Turca"
         },
         common: {
-            vsLastMonth: "vs mes anterior"
+            vsLastMonth: "vs mes anterior",
+            items: "elementos",
+            searchPlaceholder: "Buscar...",
+            cancel: "Cancelar",
+            create: "Crear",
+            edit: "Editar",
+            delete: "Eliminar",
+            save: "Guardar"
+        },
+        time: {
+            today: "Hoy",
+            yesterday: "Ayer",
+            thisMonth: "Este Mes",
+            thisWeek: "Esta Semana",
+            custom: "Personalizado",
+            startDate: "Fecha Inicio",
+            endDate: "Fecha Fin",
+            apply: "Aplicar"
+        },
+        budgets: {
+            create: "Crear Presupuesto",
+            active: "activos",
+            emptyTitle: "No hay presupuestos",
+            emptyDesc: "Crea un presupuesto para controlar tus gastos.",
+            remaining: "Restante:",
+            createModalTitle: "Crear Nuevo Presupuesto",
+            nameLabel: "Nombre del Presupuesto",
+            namePlaceholder: "ej. Supermercado",
+            amountLabel: "Cantidad",
+            categoryLabel: "Categoría",
+            selectCategory: "Seleccionar Categoría",
+            periodLabel: "Periodo",
+            periods: {
+                monthly: "Mensual",
+                weekly: "Semanal",
+                yearly: "Anual"
+            }
+        },
+        transactions: {
+            emptyTitle: "No se encontraron transacciones"
         }
     },
     pt: {
@@ -185,7 +291,21 @@ export const translations = {
             colorLabel: "Cor",
             previewLabel: "Pré-visualização",
             save: "Salvar Categoria",
-            update: "Atualizar Categoria"
+            update: "Atualizar Categoria",
+            subtitle: "Personalize suas categorias de receitas e despesas",
+            deleteConfirm: "Tem certeza que deseja excluir esta categoria?"
+        },
+        categoryNames: {
+            salary: "Salário",
+            freelance: "Freelance",
+            investment: "Investimentos",
+            food: "Alimentação",
+            groceries: "Mercado",
+            restaurant: "Restaurante",
+            housing: "Habitação",
+            transport: "Transporte",
+            entertainment: "Entretenimento",
+            shopping: "Compras"
         },
         addTransaction: {
             title: "Nova Transação",
@@ -212,7 +332,46 @@ export const translations = {
             TRY: "Lira Turca"
         },
         common: {
-            vsLastMonth: "vs mês anterior"
+            vsLastMonth: "vs mês anterior",
+            items: "itens",
+            searchPlaceholder: "Buscar...",
+            cancel: "Cancelar",
+            create: "Criar",
+            edit: "Editar",
+            delete: "Excluir",
+            save: "Salvar"
+        },
+        time: {
+            today: "Hoje",
+            yesterday: "Ontem",
+            thisMonth: "Este Mês",
+            thisWeek: "Esta Semana",
+            custom: "Personalizado",
+            startDate: "Data Início",
+            endDate: "Data Fim",
+            apply: "Aplicar"
+        },
+        budgets: {
+            create: "Criar Orçamento",
+            active: "ativos",
+            emptyTitle: "Sem orçamentos",
+            emptyDesc: "Crie um orçamento para controlar seus gastos.",
+            remaining: "Restante:",
+            createModalTitle: "Novo Orçamento",
+            nameLabel: "Nome do Orçamento",
+            namePlaceholder: "ex. Supermercado",
+            amountLabel: "Valor",
+            categoryLabel: "Categoria",
+            selectCategory: "Selecionar Categoria",
+            periodLabel: "Período",
+            periods: {
+                monthly: "Mensal",
+                weekly: "Semanal",
+                yearly: "Anual"
+            }
+        },
+        transactions: {
+            emptyTitle: "Nenhuma transação encontrada"
         }
     },
     tr: {
@@ -257,7 +416,21 @@ export const translations = {
             colorLabel: "Renk",
             previewLabel: "Önizleme",
             save: "Kategoriyi Kaydet",
-            update: "Kategoriyi Güncelle"
+            update: "Kategoriyi Güncelle",
+            subtitle: "Gelir ve gider kategorilerinizi özelleştirin",
+            deleteConfirm: "Bu kategoriyi silmek istediğinizden emin misiniz?"
+        },
+        categoryNames: {
+            salary: "Maaş",
+            freelance: "Serbest Çalışma",
+            investment: "Yatırım",
+            food: "Yiyecek",
+            groceries: "Market",
+            restaurant: "Restauran",
+            housing: "Konut",
+            transport: "Ulaşım",
+            entertainment: "Eğlence",
+            shopping: "Alışveriş"
         },
         addTransaction: {
             title: "İşlem Ekle",
@@ -284,7 +457,46 @@ export const translations = {
             TRY: "Türk Lirası"
         },
         common: {
-            vsLastMonth: "geçen aya göre"
+            vsLastMonth: "geçen aya göre",
+            items: "öğe",
+            searchPlaceholder: "Ara...",
+            cancel: "İptal",
+            create: "Oluştur",
+            edit: "Düzenle",
+            delete: "Sil",
+            save: "Kaydet"
+        },
+        time: {
+            today: "Bugün",
+            yesterday: "Dün",
+            thisMonth: "Bu Ay",
+            thisWeek: "Bu Hafta",
+            custom: "Özel",
+            startDate: "Başlangıç Tarihi",
+            endDate: "Bitiş Tarihi",
+            apply: "Uygula"
+        },
+        budgets: {
+            create: "Bütçe Oluştur",
+            active: "aktif",
+            emptyTitle: "Henüz bütçe yok",
+            emptyDesc: "Harcamalarınızı takip etmek için bir bütçe oluşturun.",
+            remaining: "Kalan:",
+            createModalTitle: "Yeni Bütçe Oluştur",
+            nameLabel: "Bütçe Adı",
+            namePlaceholder: "ör. Market",
+            amountLabel: "Tutar",
+            categoryLabel: "Kategori",
+            selectCategory: "Kategori Seç",
+            periodLabel: "Periyot",
+            periods: {
+                monthly: "Aylık",
+                weekly: "Haftalık",
+                yearly: "Yıllık"
+            }
+        },
+        transactions: {
+            emptyTitle: "İşlem bulunamadı"
         }
     }
 };

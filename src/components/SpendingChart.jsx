@@ -3,9 +3,11 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recha
 import { mockTransactions } from '../data/mockData';
 import { getCategoryColor, getCategoryIcon } from '../data/categoryOptions';
 import { useCurrency } from '../context/CurrencyContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const SpendingChart = () => {
     const { formatAmount } = useCurrency();
+    const { t } = useLanguage();
 
     const spendingData = useMemo(() => {
         const expenses = mockTransactions.filter(t => t.type === 'expense');
@@ -21,13 +23,13 @@ const SpendingChart = () => {
 
         return Object.entries(categoryMap)
             .map(([name, value]) => ({
-                name: name.charAt(0).toUpperCase() + name.slice(1),
+                name: t(`categoryNames.${name}`) || (name.charAt(0).toUpperCase() + name.slice(1)),
                 value,
                 color: getCategoryColor(name),
                 icon: getCategoryIcon(name)
             }))
             .sort((a, b) => b.value - a.value);
-    }, []);
+    }, [t]);
 
     const total = spendingData.reduce((acc, item) => acc + item.value, 0);
 

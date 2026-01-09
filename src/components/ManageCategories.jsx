@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { Plus, Trash2, Edit2, GripVertical } from 'lucide-react';
 import { categoryIcons } from '../data/categoryOptions';
 import { useCategories } from '../context/CategoriesContext';
+import { useLanguage } from '../context/LanguageContext';
 import CategoryForm from './CategoryForm';
 
 const ManageCategories = () => {
+    const { t } = useLanguage();
     const { categories, addCategory, updateCategory, deleteCategory } = useCategories();
     const [showForm, setShowForm] = useState(false);
     const [editingCategory, setEditingCategory] = useState(null);
@@ -15,7 +17,7 @@ const ManageCategories = () => {
     const incomeCategories = categories.filter(c => c.type === 'income');
 
     const handleDelete = (id) => {
-        if (confirm('Are you sure you want to delete this category?')) {
+        if (confirm(t('categories.deleteConfirm'))) {
             deleteCategory(id);
         }
     };
@@ -50,7 +52,7 @@ const ManageCategories = () => {
                     style={{ backgroundColor: accentColor }}
                     onClick={() => handleAddNew(type)}
                 >
-                    <Plus size={16} /> Add
+                    <Plus size={16} /> {t('categories.add')}
                 </button>
             </div>
             <div className="categories-list">
@@ -62,7 +64,7 @@ const ManageCategories = () => {
                                 <IconComponent size={24} color="white" />
                             </div>
                             <div className="cat-info">
-                                <span className="cat-name">{cat.name}</span>
+                                <span className="cat-name">{t(`categoryNames.${cat.name.toLowerCase()}`) || cat.name}</span>
                             </div>
                             <div className="cat-actions">
                                 <button className="action-btn edit" onClick={() => handleEdit(cat)}>
@@ -86,8 +88,8 @@ const ManageCategories = () => {
         <div className="manage-categories-container">
             <div className="page-header">
                 <div>
-                    <h2 className="title">Manage Categories</h2>
-                    <p className="subtitle">Customize your income and expense categories</p>
+                    <h2 className="title">{t('sidebar.categories')}</h2>
+                    <p className="subtitle">{t('categories.subtitle')}</p>
                 </div>
             </div>
 
@@ -96,26 +98,26 @@ const ManageCategories = () => {
                     className={`tab-btn expense ${activeTab === 'expense' ? 'active' : ''}`}
                     onClick={() => setActiveTab('expense')}
                 >
-                    Expense
+                    {t('categories.expense')}
                 </button>
                 <button
                     className={`tab-btn income ${activeTab === 'income' ? 'active' : ''}`}
                     onClick={() => setActiveTab('income')}
                 >
-                    Income
+                    {t('categories.income')}
                 </button>
             </div>
 
             <div className="split-grid">
                 <CategoryList
-                    title="Expense Categories"
+                    title={t('categories.expense')}
                     items={expenseCategories}
                     type="expense"
                     accentColor="#FF5252"
                     className={activeTab === 'expense' ? 'show-mobile' : 'hide-mobile'}
                 />
                 <CategoryList
-                    title="Income Categories"
+                    title={t('categories.income')}
                     items={incomeCategories}
                     type="income"
                     accentColor="#4CAF50"

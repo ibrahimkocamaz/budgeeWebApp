@@ -92,7 +92,6 @@ export const mockTransactions = [
 export const mockBudgets = [
   {
     id: 'b1',
-    name: 'Groceries',
     category: 'food',
     amount: 800.00,
     period: 'monthly',
@@ -100,7 +99,6 @@ export const mockBudgets = [
   },
   {
     id: 'b2',
-    name: 'Transport',
     category: 'transport',
     amount: 300.00,
     period: 'monthly',

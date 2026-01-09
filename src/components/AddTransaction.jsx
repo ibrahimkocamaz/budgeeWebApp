@@ -180,7 +180,9 @@ const AddTransaction = () => {
                   >
                     <option value="" disabled>{t('addTransaction.selectCategory')}</option>
                     {(tx.type === 'expense' ? expenseCategories : incomeCategories).map(cat => (
-                      <option key={cat.id} value={cat.name.toLowerCase()}>{cat.name}</option>
+                      <option key={cat.id} value={cat.name.toLowerCase()}>
+                        {t(`categoryNames.${cat.name.toLowerCase()}`) || cat.name}
+                      </option>
                     ))}
                   </select>
                 </div>

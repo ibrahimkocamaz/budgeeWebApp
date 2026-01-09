@@ -70,14 +70,14 @@ const Budgets = ({ limit, simpleMode = false }) => {
                 <div className="page-header">
                     <div>
                         <h2 className="title">{t('sidebar.budgets')}</h2>
-                        <p className="subtitle">{budgets.length} {t('sidebar.budgets').toLowerCase()} active</p>
+                        <p className="subtitle">{budgets.length} {t('sidebar.budgets').toLowerCase()} {t('budgets.active')}</p>
                     </div>
                     <button
                         className="btn-primary"
                         onClick={() => setShowCreateModal(true)}
                     >
                         <Plus size={20} />
-                        Create Budget
+                        {t('budgets.create')}
                     </button>
                 </div>
             )}
@@ -87,8 +87,8 @@ const Budgets = ({ limit, simpleMode = false }) => {
                     <div className="empty-icon">
                         <AlertCircle size={40} />
                     </div>
-                    <h3>No budgets yet</h3>
-                    <p>Create a budget to track your spending.</p>
+                    <h3>{t('budgets.emptyTitle')}</h3>
+                    <p>{t('budgets.emptyDesc')}</p>
                 </div>
             ) : (
                 <div className="budgets-grid">
@@ -104,8 +104,8 @@ const Budgets = ({ limit, simpleMode = false }) => {
                                             <Icon size={24} color="#FFF" />
                                         </div>
                                         <div className="budget-info">
-                                            <h3>{budget.name}</h3>
-                                            <span className="period-badge">{budget.period}</span>
+                                            <h3>{t(`categoryNames.${budget.category.toLowerCase()}`) || budget.category}</h3>
+                                            <span className="period-badge">{t(`budgets.periods.${budget.period}`) || budget.period}</span>
                                         </div>
                                     </div>
                                     <div className="budget-actions">
@@ -132,7 +132,7 @@ const Budgets = ({ limit, simpleMode = false }) => {
                                         />
                                     </div>
                                     <div className="remaining-label">
-                                        Remaining: <span className="remaining-value">{formatAmount(budget.remaining)}</span>
+                                        {t('budgets.remaining')} <span className="remaining-value">{formatAmount(budget.remaining)}</span>
                                     </div>
                                 </div>
                             </div>
@@ -145,17 +145,14 @@ const Budgets = ({ limit, simpleMode = false }) => {
                 <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
                     <div className="modal-content" onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>Create New Budget</h2>
+                            <h2>{t('budgets.createModalTitle')}</h2>
                             <button className="close-btn" onClick={() => setShowCreateModal(false)}>×</button>
                         </div>
 
-                        <div className="form-group">
-                            <label>Budget Name</label>
-                            <input type="text" placeholder="e.g. Groceries" />
-                        </div>
+
 
                         <div className="form-group">
-                            <label>Amount</label>
+                            <label>{t('budgets.amountLabel')}</label>
                             <div className="amount-input">
                                 <span className="currency-symbol">₺</span>
                                 <input type="number" placeholder="0.00" />
@@ -164,22 +161,22 @@ const Budgets = ({ limit, simpleMode = false }) => {
 
                         <div className="form-row">
                             <div className="form-group">
-                                <label>Category</label>
+                                <label>{t('budgets.categoryLabel')}</label>
                                 <select>
-                                    <option value="">Select Category</option>
+                                    <option value="">{t('budgets.selectCategory')}</option>
                                     {expenseCategories.map(cat => (
                                         <option key={cat.id} value={cat.name.toLowerCase()}>
-                                            {cat.name}
+                                            {t(`categoryNames.${cat.name.toLowerCase()}`) || cat.name}
                                         </option>
                                     ))}
                                 </select>
                             </div>
                             <div className="form-group">
-                                <label>Period</label>
+                                <label>{t('budgets.periodLabel')}</label>
                                 <select>
-                                    <option value="monthly">Monthly</option>
-                                    <option value="weekly">Weekly</option>
-                                    <option value="yearly">Yearly</option>
+                                    <option value="monthly">{t('budgets.periods.monthly')}</option>
+                                    <option value="weekly">{t('budgets.periods.weekly')}</option>
+                                    <option value="yearly">{t('budgets.periods.yearly')}</option>
                                 </select>
                             </div>
                         </div>
@@ -189,10 +186,10 @@ const Budgets = ({ limit, simpleMode = false }) => {
                                 className="btn-secondary"
                                 onClick={() => setShowCreateModal(false)}
                             >
-                                Cancel
+                                {t('common.cancel')}
                             </button>
                             <button className="btn-primary">
-                                Create Budget
+                                {t('budgets.create')}
                             </button>
                         </div>
                     </div>

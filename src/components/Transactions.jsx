@@ -6,25 +6,87 @@ import { useCurrency } from '../context/CurrencyContext';
 import { getCategoryIcon, getCategoryColor } from '../data/categoryOptions';
 
 const Transactions = ({ limit, showControls = true }) => {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const { formatAmount } = useCurrency();
     const [filter, setFilter] = useState('all'); // all, income, expense
+    const [timeFilter, setTimeFilter] = useState('month'); // today, week, month, custom
+    const [customDateRange, setCustomDateRange] = useState({ start: '', end: '' });
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [categoryFilter, setCategoryFilter] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
 
-    const filteredTransactions = useMemo(() => {
-        let transactions = mockTransactions.filter(tx => {
-            const matchesFilter = filter === 'all' || tx.type === filter;
+    // 1. Base Filter (Time and Search)
+    const baseTransactions = useMemo(() => {
+        return mockTransactions.filter(tx => {
             const matchesSearch =
                 tx.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 tx.category.toLowerCase().includes(searchTerm.toLowerCase());
-            return matchesFilter && matchesSearch;
+
+            // Time Filter Logic
+            const txDate = new Date(tx.date);
+            const now = new Date();
+            let matchesTime = true;
+
+            if (timeFilter === 'today') {
+                matchesTime = txDate.toDateString() === now.toDateString();
+            } else if (timeFilter === 'week') {
+                const startOfWeek = new Date(now);
+                startOfWeek.setDate(now.getDate() - now.getDay());
+                startOfWeek.setHours(0, 0, 0, 0);
+
+                const endOfWeek = new Date(startOfWeek);
+                endOfWeek.setDate(startOfWeek.getDate() + 6);
+                endOfWeek.setHours(23, 59, 59, 999);
+
+                matchesTime = txDate >= startOfWeek && txDate <= endOfWeek;
+            } else if (timeFilter === 'month') {
+                matchesTime = txDate.getMonth() === now.getMonth() && txDate.getFullYear() === now.getFullYear();
+            } else if (timeFilter === 'custom') {
+                if (customDateRange.start && customDateRange.end) {
+                    const startDate = new Date(customDateRange.start);
+                    startDate.setHours(0, 0, 0, 0);
+                    const endDate = new Date(customDateRange.end);
+                    endDate.setHours(23, 59, 59, 999);
+                    matchesTime = txDate >= startDate && txDate <= endDate;
+                } else {
+                    matchesTime = true;
+                }
+            }
+
+            return matchesSearch && matchesTime;
+        });
+    }, [searchTerm, timeFilter, customDateRange]);
+
+    // 2. Available Categories (Based on Base + Type Filter)
+    const availableCategories = useMemo(() => {
+        const typeFiltered = filter === 'all'
+            ? baseTransactions
+            : baseTransactions.filter(tx => tx.type === filter);
+
+        const categories = [...new Set(typeFiltered.map(tx => tx.category))];
+        return categories.sort();
+    }, [baseTransactions, filter]);
+
+    // 3. Final Filter (Type + Category + Sort + Limit)
+    const filteredTransactions = useMemo(() => {
+        let transactions = baseTransactions.filter(tx => {
+            const matchesType = filter === 'all' || tx.type === filter;
+            const matchesCategory = categoryFilter ? tx.category === categoryFilter : true;
+            return matchesType && matchesCategory;
         }).sort((a, b) => new Date(b.date) - new Date(a.date));
 
         if (limit) {
             transactions = transactions.slice(0, limit);
         }
         return transactions;
-    }, [filter, searchTerm, limit]);
+    }, [baseTransactions, filter, categoryFilter, limit]);
+
+    // Reset category filter if it's no longer available
+    React.useEffect(() => {
+        if (categoryFilter && !availableCategories.includes(categoryFilter)) {
+            setCategoryFilter(null);
+        }
+    }, [availableCategories, categoryFilter]);
 
     // Group by Date
     const groupedTransactions = useMemo(() => {
@@ -43,9 +105,9 @@ const Transactions = ({ limit, showControls = true }) => {
         const yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
 
-        if (date.toDateString() === today.toDateString()) return 'Today';
-        if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
-        return date.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        if (date.toDateString() === today.toDateString()) return t('time.today');
+        if (date.toDateString() === yesterday.toDateString()) return t('time.yesterday');
+        return date.toLocaleDateString(language, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     };
 
     return (
@@ -55,7 +117,7 @@ const Transactions = ({ limit, showControls = true }) => {
                     <div className="page-header">
                         <div>
                             <h2 className="title">{t('sidebar.transactions')}</h2>
-                            <p className="subtitle">{filteredTransactions.length} items</p>
+                            <p className="subtitle">{filteredTransactions.length} {t('common.items')}</p>
                         </div>
 
                         <div className="actions">
@@ -63,7 +125,7 @@ const Transactions = ({ limit, showControls = true }) => {
                                 <Search size={18} />
                                 <input
                                     type="text"
-                                    placeholder="Search..."
+                                    placeholder={t('common.searchPlaceholder')}
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                 />
@@ -71,25 +133,104 @@ const Transactions = ({ limit, showControls = true }) => {
                         </div>
                     </div>
 
-                    <div className="filter-tabs">
-                        <button
-                            className={`tab ${filter === 'all' ? 'active' : ''}`}
-                            onClick={() => setFilter('all')}
-                        >
-                            {t('dashboard.viewAll')}
-                        </button>
-                        <button
-                            className={`tab ${filter === 'income' ? 'active' : ''}`}
-                            onClick={() => setFilter('income')}
-                        >
-                            {t('dashboard.income')}
-                        </button>
-                        <button
-                            className={`tab ${filter === 'expense' ? 'active' : ''}`}
-                            onClick={() => setFilter('expense')}
-                        >
-                            {t('dashboard.expenses')}
-                        </button>
+                    <div className="filters-container">
+                        {/* Time Filters */}
+                        <div className="time-filters">
+                            <button
+                                className={`time-btn ${timeFilter === 'month' ? 'active' : ''}`}
+                                onClick={() => setTimeFilter('month')}
+                            >
+                                {t('time.thisMonth')}
+                            </button>
+                            <button
+                                className={`time-btn ${timeFilter === 'week' ? 'active' : ''}`}
+                                onClick={() => setTimeFilter('week')}
+                            >
+                                {t('time.thisWeek')}
+                            </button>
+                            <button
+                                className={`time-btn ${timeFilter === 'today' ? 'active' : ''}`}
+                                onClick={() => setTimeFilter('today')}
+                            >
+                                {t('time.today')}
+                            </button>
+                            <div className="custom-date-wrapper" style={{ position: 'relative' }}>
+                                <button
+                                    className={`time-btn ${timeFilter === 'custom' ? 'active' : ''}`}
+                                    onClick={() => {
+                                        setTimeFilter('custom');
+                                        setShowDatePicker(!showDatePicker);
+                                    }}
+                                >
+                                    <Calendar size={14} />
+                                    {t('time.custom')}
+                                </button>
+                                {showDatePicker && (
+                                    <div className="date-picker-popover">
+                                        <div className="date-input-group">
+                                            <label>{t('time.startDate')}</label>
+                                            <input
+                                                type="date"
+                                                value={customDateRange.start}
+                                                onChange={(e) => setCustomDateRange({ ...customDateRange, start: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="date-input-group">
+                                            <label>{t('time.endDate')}</label>
+                                            <input
+                                                type="date"
+                                                value={customDateRange.end}
+                                                onChange={(e) => setCustomDateRange({ ...customDateRange, end: e.target.value })}
+                                            />
+                                        </div>
+                                        <button
+                                            className="apply-btn"
+                                            onClick={() => setShowDatePicker(false)}
+                                        >
+                                            {t('time.apply')}
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Type Filters */}
+                        <div className="filter-tabs">
+                            <button
+                                className={`tab ${filter === 'all' ? 'active' : ''}`}
+                                onClick={() => setFilter('all')}
+                            >
+                                {t('dashboard.viewAll')}
+                            </button>
+                            <button
+                                className={`tab ${filter === 'income' ? 'active' : ''}`}
+                                onClick={() => setFilter('income')}
+                            >
+                                {t('dashboard.income')}
+                            </button>
+                            <button
+                                className={`tab ${filter === 'expense' ? 'active' : ''}`}
+                                onClick={() => setFilter('expense')}
+                            >
+                                {t('dashboard.expenses')}
+                            </button>
+
+                            {/* Divider and Category Filters */}
+                            {availableCategories.length > 0 && (
+                                <>
+                                    <div className="filter-divider" />
+                                    {availableCategories.map(cat => (
+                                        <button
+                                            key={cat}
+                                            className={`tab ${categoryFilter === cat ? 'active' : ''}`}
+                                            onClick={() => setCategoryFilter(categoryFilter === cat ? null : cat)}
+                                        >
+                                            {t(`categoryNames.${cat.toLowerCase()}`) || cat}
+                                        </button>
+                                    ))}
+                                </>
+                            )}
+                        </div>
                     </div>
                 </>
             )}
@@ -118,17 +259,17 @@ const Transactions = ({ limit, showControls = true }) => {
                                         <div className="details">
                                             <div className="top-row">
                                                 <span className="tx-description">
-                                                    {tx.description || t(`categories.${tx.category}`) || tx.category}
+                                                    {tx.description || t(`categoryNames.${tx.category.toLowerCase()}`) || tx.category}
                                                 </span>
                                             </div>
                                             <div className="bottom-row">
-                                                <span className="tx-category">{tx.category}</span>
+                                                <span className="tx-category">{t(`categoryNames.${tx.category.toLowerCase()}`) || tx.category}</span>
                                                 {isRecurring && (
                                                     <span className="badge-recurring">
                                                         <RefreshCw size={12} />
                                                         {tx.recurringTransactionCount && tx.totalRecurringTransactions
                                                             ? `${tx.recurringTransactionCount}/${tx.totalRecurringTransactions}`
-                                                            : 'Recurring'}
+                                                            : t('addTransaction.recurring')}
                                                     </span>
                                                 )}
                                             </div>
@@ -159,7 +300,7 @@ const Transactions = ({ limit, showControls = true }) => {
                         <div className="empty-icon">
                             <Filter size={48} />
                         </div>
-                        <p>No transactions found</p>
+                        <p>{t('transactions.emptyTitle')}</p>
                     </div>
                 )}
             </div>
@@ -218,10 +359,119 @@ const Transactions = ({ limit, showControls = true }) => {
                     outline: none;
                 }
 
+                .filters-container {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 16px;
+                    margin-bottom: 24px;
+                }
+
+                .time-filters {
+                    display: flex;
+                    gap: 8px;
+                    flex-wrap: wrap;
+                    overflow: visible;
+                    padding-bottom: 4px;
+                }
+
+                .time-btn {
+                    padding: 6px 12px;
+                    border-radius: 8px;
+                    background-color: var(--bg-card);
+                    border: 1px solid var(--color-divider);
+                    color: var(--text-muted);
+                    font-size: 0.85rem;
+                    font-weight: 500;
+                    cursor: pointer;
+                    white-space: nowrap;
+                    transition: all 0.2s;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                }
+
+                .time-btn:hover {
+                    border-color: var(--text-muted);
+                    color: var(--text-main);
+                }
+
+                .time-btn.active {
+                    background-color: var(--text-main);
+                    color: var(--text-inverse);
+                    border-color: var(--text-main);
+                }
+
+                .custom-date-wrapper {
+                    display: inline-block;
+                }
+
+                .date-picker-popover {
+                    position: absolute;
+                    top: 100%;
+                    right: 0;
+                    width: 280px;
+                    background-color: var(--bg-card);
+                    border: 1px solid var(--color-divider);
+                    border-radius: 12px;
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+                    padding: 16px;
+                    z-index: 100;
+                    margin-top: 8px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 12px;
+                }
+
+                .date-input-group {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 4px;
+                }
+
+                .date-input-group label {
+                    font-size: 0.75rem;
+                    color: var(--text-muted);
+                    font-weight: 500;
+                }
+
+                .date-input-group input {
+                    background-color: var(--bg-main);
+                    border: 1px solid var(--color-input-border);
+                    border-radius: 6px;
+                    padding: 8px;
+                    color: var(--text-main);
+                    font-size: 0.875rem;
+                }
+
+                .apply-btn {
+                    background-color: var(--text-main);
+                    color: var(--text-inverse);
+                    border: none;
+                    border-radius: 6px;
+                    padding: 8px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    margin-top: 4px;
+                    transition: opacity 0.2s;
+                    text-align: center;
+                }
+
+                .apply-btn:hover {
+                    opacity: 0.9;
+                }
+
+                .filter-divider {
+                    width: 1px;
+                    height: 24px;
+                    background-color: var(--color-divider);
+                    margin: 0 8px;
+                    flex-shrink: 0;
+                    align-self: center;
+                }
+
                 .filter-tabs {
                     display: flex;
                     gap: 8px;
-                    margin-bottom: 24px;
                     overflow-x: auto;
                     padding-bottom: 4px;
                 }
@@ -268,7 +518,6 @@ const Transactions = ({ limit, showControls = true }) => {
                     overflow: hidden;
                 }
 
-                /* Widget Mode Overrides for group items to fit dashboard if needed */
                 .widget-mode .group-items {
                      /* Reuse existing styles */
                 }
