@@ -3,6 +3,7 @@ import { ArrowUpRight, ArrowDownRight, DollarSign } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { mockTransactions } from '../data/mockData';
 import SpendingChart from './SpendingChart';
+import Budgets from './Budgets';
 import Transactions from './Transactions';
 import { useLanguage } from '../context/LanguageContext';
 import { useCurrency } from '../context/CurrencyContext';
@@ -40,105 +41,136 @@ const Dashboard = () => {
 
       return acc;
     }, { totalBalance: 12500, income: 0, expenses: 0 });
-    // Initial balance offset (e.g. starting balance) or 0. 
-    // If I start at 0, the balance might be negative if history is incomplete.
-    // Let's assume a starting balance of 12500 for the mock user to match the "wealthy" feel of previous screenshots, 
-    // OR just sum the transactions. 
-    // User asked to "get the data from calculated". If I only sum -200 + 4000... 
-    // If the mock data represents ALL history, then 0 is fine.
-    // But `mockTransactions` is just "Recent".
-    // So `totalBalance` should probably stay mock OR be "Starting + Sum".
-    // I will use `12500` as base "Initial Balance" to keep the UI looking realistic (not $0 or negative).
   }, []);
 
   return (
     <div className="dashboard-container">
 
-      {/* Summary Cards */}
-      <section className="summary-grid">
-        <div className="card balance-card">
-          <div className="card-header">
-            <h3>{t('dashboard.totalBalance')}</h3>
-            <div className="icon-wrapper">
-              <DollarSign size={20} />
+      <div className="dashboard-content">
+        {/* LEFT COLUMN (2/3) */}
+        <div className="left-column">
+
+          {/* Summary Cards Row */}
+          <section className="summary-cards-row">
+            <div className="card balance-card">
+              <div className="card-header">
+                <h3>{t('dashboard.totalBalance')}</h3>
+                <div className="icon-wrapper">
+                  <DollarSign size={20} />
+                </div>
+              </div>
+              <div className="card-amount">{formatAmount(summary.totalBalance)}</div>
+              <div className="card-footer">
+                <span className="badge positive">+2.5%</span> <span className="text-muted">{t('common.vsLastMonth')}</span>
+              </div>
             </div>
-          </div>
-          <div className="card-amount">{formatAmount(summary.totalBalance)}</div>
-          <div className="card-footer">
-            <span className="badge positive">+2.5%</span> <span className="text-muted">{t('common.vsLastMonth')}</span>
-          </div>
+
+            <div className="card income-card">
+              <div className="card-header">
+                <h3>{t('dashboard.income')}</h3>
+                <div className="icon-wrapper success">
+                  <ArrowUpRight size={20} />
+                </div>
+              </div>
+              <div className="card-amount success-text">{formatAmount(summary.income)}</div>
+            </div>
+
+            <div className="card expense-card">
+              <div className="card-header">
+                <h3>{t('dashboard.expenses')}</h3>
+                <div className="icon-wrapper error">
+                  <ArrowDownRight size={20} />
+                </div>
+              </div>
+              <div className="card-amount error-text">{formatAmount(summary.expenses)}</div>
+            </div>
+          </section>
+
+          {/* Recent Transactions */}
+          <section className="transactions-section">
+            <div className="section-header">
+              <h2>{t('dashboard.recentTransactions')}</h2>
+              <Link to="/transactions" className="btn-link">{t('dashboard.viewAll')}</Link>
+            </div>
+
+            <div className="transactions-list-widget">
+              <Transactions limit={5} showControls={false} />
+            </div>
+          </section>
         </div>
 
-        <div className="card income-card">
-          <div className="card-header">
-            <h3>{t('dashboard.income')}</h3>
-            <div className="icon-wrapper success">
-              <ArrowUpRight size={20} />
+        {/* RIGHT COLUMN (1/3) */}
+        <div className="right-column">
+          {/* Budgets Widget */}
+          <section className="budgets-section">
+
+            <Budgets limit={3} simpleMode={true} />
+          </section>
+
+          {/* Charts Section */}
+          <section className="charts-section">
+            <div className="section-header">
+              <h2>{t('dashboard.spendingByCategory')}</h2>
             </div>
-          </div>
-          <div className="card-amount success-text">{formatAmount(summary.income)}</div>
+            <SpendingChart />
+          </section>
         </div>
-
-        <div className="card expense-card">
-          <div className="card-header">
-            <h3>{t('dashboard.expenses')}</h3>
-            <div className="icon-wrapper error">
-              <ArrowDownRight size={20} />
-            </div>
-          </div>
-          <div className="card-amount error-text">{formatAmount(summary.expenses)}</div>
-        </div>
-      </section>
-
-      {/* Main Grid: Transactions & Charts */}
-      <div className="main-grid">
-        {/* Recent Transactions */}
-        <section className="transactions-section">
-          <div className="section-header">
-            <h2>{t('dashboard.recentTransactions')}</h2>
-            <Link to="/transactions" className="btn-link">{t('dashboard.viewAll')}</Link>
-          </div>
-
-          <div className="transactions-list-widget">
-            <Transactions limit={5} showControls={false} />
-          </div>
-        </section>
-
-        {/* Charts Section */}
-        <section className="charts-section">
-          <div className="section-header">
-            <h2>{t('dashboard.spendingByCategory')}</h2>
-          </div>
-          <SpendingChart />
-        </section>
       </div>
 
       <style>{`
         .dashboard-container {
-          display: flex;
-          flex-direction: column;
-          gap: 2rem;
-          max-width: 1200px;
+          max-width: 100%;
           margin: 0 auto;
         }
 
-        /* Grid System */
-        .summary-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-          gap: 1.5rem;
-        }
-
-        .main-grid {
+        .dashboard-content {
           display: grid;
           grid-template-columns: 2fr 1fr;
+          gap: 2rem;
+          align-items: start;
+        }
+
+        .left-column,
+        .right-column {
+          display: flex;
+          flex-direction: column;
           gap: 1.5rem;
         }
 
+        /* Summary Cards Row */
+        .summary-cards-row {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 1.5rem;
+        }
+
+        @media (max-width: 1200px) {
+           .summary-cards-row {
+              grid-template-columns: 1fr; /* Stack cards on smaller screens? Or resize? */
+           }
+           /* Perhaps 3 columns is too tight on 1024px split 2/3?
+              2/3 of 1024 is ~680px. 680/3 = 226px per card. This is fine.
+           */
+        }
+        
         @media (max-width: 1024px) {
-          .main-grid {
+          .dashboard-content {
             grid-template-columns: 1fr;
           }
+          
+          .summary-cards-row {
+             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          }
+        }
+
+        /* Budgets Section */
+        .budgets-section {
+          /* background-color: var(--bg-card); */
+          /* border-radius: 1rem; */
+          /* border: 1px solid var(--color-divider); */
+          /* padding: 1.5rem; */
+          display: flex;
+          flex-direction: column;
         }
 
         /* Charts Section */
@@ -149,6 +181,8 @@ const Dashboard = () => {
           padding: 1.5rem;
           display: flex;
           flex-direction: column;
+          position: sticky;
+          top: 24px; /* Sticky sidebar effect */
         }
 
         .card {
@@ -251,50 +285,6 @@ const Dashboard = () => {
           gap: 1rem;
         }
 
-        .transaction-item {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-          padding: 1rem;
-          border-radius: 0.75rem;
-          background-color: var(--bg-app); /* Slightly contrasted against card bg */
-          transition: background-color 0.2s;
-        }
-
-        .transaction-item:hover {
-          background-color: rgba(255,255,255,0.03);
-        }
-
-        .tx-icon {
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          background-color: rgba(255,255,255,0.05);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: var(--text-muted);
-        }
-
-        .tx-info {
-          flex: 1;
-        }
-
-        .tx-info h4 {
-          font-size: 1rem;
-          font-weight: 500;
-          margin-bottom: 0.25rem;
-        }
-
-        .tx-info p {
-          font-size: 0.875rem;
-          color: var(--text-muted);
-        }
-
-        .tx-amount {
-          font-weight: 600;
-          font-size: 1rem;
-        }
       `}</style>
     </div>
   );

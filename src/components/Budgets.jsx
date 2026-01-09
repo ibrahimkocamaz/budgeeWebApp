@@ -6,7 +6,7 @@ import { useCategories } from '../context/CategoriesContext';
 import { mockBudgets, mockTransactions } from '../data/mockData';
 import { getCategoryIcon, getCategoryColor } from '../data/categoryOptions';
 
-const Budgets = () => {
+const Budgets = ({ limit, simpleMode = false }) => {
     const { t } = useLanguage();
     const { formatAmount } = useCurrency();
     const { getCategoriesByType } = useCategories();
@@ -55,24 +55,32 @@ const Budgets = () => {
             const percentage = Math.min(100, (spent / budget.amount) * 100);
 
             return { ...budget, spent, remaining, percentage };
-        });
-    }, [budgets]);
+            return { ...budget, spent, remaining, percentage };
+        }).sort((a, b) => b.percentage - a.percentage);
+
+        if (limit) {
+            return sorted.slice(0, limit);
+        }
+        return sorted;
+    }, [budgets, limit]);
 
     return (
-        <div className="budgets-container">
-            <div className="page-header">
-                <div>
-                    <h2 className="title">{t('sidebar.budgets')}</h2>
-                    <p className="subtitle">{budgets.length} {t('sidebar.budgets').toLowerCase()} active</p>
+        <div className={`budgets-container ${simpleMode ? 'widget-mode' : ''}`}>
+            {!simpleMode && (
+                <div className="page-header">
+                    <div>
+                        <h2 className="title">{t('sidebar.budgets')}</h2>
+                        <p className="subtitle">{budgets.length} {t('sidebar.budgets').toLowerCase()} active</p>
+                    </div>
+                    <button
+                        className="btn-primary"
+                        onClick={() => setShowCreateModal(true)}
+                    >
+                        <Plus size={20} />
+                        Create Budget
+                    </button>
                 </div>
-                <button
-                    className="btn-primary"
-                    onClick={() => setShowCreateModal(true)}
-                >
-                    <Plus size={20} />
-                    Create Budget
-                </button>
-            </div>
+            )}
 
             {budgets.length === 0 ? (
                 <div className="empty-state">
@@ -194,9 +202,14 @@ const Budgets = () => {
             <style>{`
                 /* ... existing styles ... */
                 .budgets-container {
-                    max-width: 800px;
+                    max-width: 100%;
                     margin: 0 auto;
                     padding-bottom: 80px;
+                }
+
+                .budgets-container.widget-mode {
+                    padding-bottom: 0;
+                    margin: 0;
                 }
 
                 .page-header {
@@ -219,7 +232,14 @@ const Budgets = () => {
 
                 .budgets-grid {
                     display: grid;
-                    gap: 16px;
+                    grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+                    gap: 1.5rem;
+                }
+                
+                @media (max-width: 768px) {
+                    .budgets-grid {
+                        grid-template-columns: 1fr;
+                    }
                 }
 
                 .budget-card {

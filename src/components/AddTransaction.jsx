@@ -237,8 +237,7 @@ const AddTransaction = () => {
       <style>{`
                 .add-transaction-container {
                     max-width: 100%;
-                    margin: 0;
-                    padding: 1.5rem 2rem;
+                    margin: 0 auto;
                     padding-bottom: 100px;
                 }
 

@@ -11,7 +11,22 @@ const Layout = ({ children }) => {
   const { isDark, toggleTheme } = useTheme();
   const isActive = (path) => location.pathname === path;
   const [showModal, setShowModal] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
+  // Initialize collapsed state based on screen width
+  const [collapsed, setCollapsed] = useState(window.innerWidth <= 960);
+
+  // Auto-collapse on resize
+  React.useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth <= 960) {
+        setCollapsed(true);
+      } else {
+        setCollapsed(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const getPageTitle = (path) => {
     switch (path) {

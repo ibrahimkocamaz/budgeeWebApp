@@ -28,7 +28,7 @@ const Settings = () => {
 
             <style>{`
                 .settings-container {
-                    max-width: 600px;
+                    max-width: 100%;
                     margin: 0 auto;
                     color: var(--text-main);
                 }

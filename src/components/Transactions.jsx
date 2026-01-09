@@ -166,7 +166,7 @@ const Transactions = ({ limit, showControls = true }) => {
 
             <style>{`
                 .transactions-wrapper.full-page {
-                    max-width: 800px;
+                    max-width: 100%;
                     margin: 0 auto;
                     padding-bottom: 80px;
                 }
@@ -289,7 +289,7 @@ const Transactions = ({ limit, showControls = true }) => {
                 }
 
                 .transaction-item:hover {
-                    background-color: rgba(255,255,255,0.02);
+                    background-color: rgba(0,0,0,0.04);
                 }
 
                 .icon-wrapper {
