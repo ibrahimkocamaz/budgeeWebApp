@@ -1,24 +1,25 @@
 import React, { useMemo } from 'react';
 import { ArrowUpRight, ArrowDownRight, DollarSign } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { mockTransactions } from '../data/mockData';
 import SpendingChart from './SpendingChart';
 import Budgets from './Budgets';
 import Transactions from './Transactions';
 import { useLanguage } from '../context/LanguageContext';
 import { useCurrency } from '../context/CurrencyContext';
+import { useTransactions } from '../context/TransactionsContext';
 
 
 const Dashboard = () => {
   const { t } = useLanguage();
   const { formatAmount } = useCurrency();
+  const { transactions } = useTransactions();
 
   const summary = useMemo(() => {
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
 
-    return mockTransactions.reduce((acc, tx) => {
+    return transactions.reduce((acc, tx) => {
       const txDate = new Date(tx.date);
       const isCurrentMonth = txDate.getMonth() === currentMonth && txDate.getFullYear() === currentYear;
       const amount = Number(tx.amount);

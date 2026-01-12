@@ -3,16 +3,69 @@ import { Plus, Edit2, Trash2, AlertCircle } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { useCategories } from '../context/CategoriesContext';
-import { mockBudgets, mockTransactions } from '../data/mockData';
+import { useBudgets } from '../context/BudgetsContext';
+import { mockTransactions } from '../data/mockData';
 import { getCategoryIcon, getCategoryColor } from '../data/categoryOptions';
+import ConfirmationModal from './ConfirmationModal';
 
 const Budgets = ({ limit, simpleMode = false }) => {
     const { t } = useLanguage();
     const { formatAmount } = useCurrency();
     const { getCategoriesByType } = useCategories();
+    const { budgets, deleteBudget, addBudget, updateBudget } = useBudgets();
     const expenseCategories = getCategoriesByType('expense');
-    const [budgets, setBudgets] = useState(mockBudgets);
-    const [showCreateModal, setShowCreateModal] = useState(false);
+
+    // const [budgets, setBudgets] = useState(mockBudgets); // REPLACED BY CONTEXT
+    // const [budgets, setBudgets] = useState(mockBudgets); // REPLACED BY CONTEXT
+    const [modalState, setModalState] = useState({ isOpen: false, mode: 'create', budget: null });
+
+    // Form State (we need to control inputs to pre-fill them)
+    const [formData, setFormData] = useState({ amount: '', category: '', period: 'monthly' });
+    const [deleteModal, setDeleteModal] = useState({ isOpen: false, budgetId: null });
+
+    const handleDeleteClick = (id) => {
+        setDeleteModal({ isOpen: true, budgetId: id });
+    };
+
+    const handleEditClick = (budget) => {
+        setFormData({
+            amount: budget.amount,
+            category: budget.category,
+            period: budget.period
+        });
+        setModalState({ isOpen: true, mode: 'edit', budget });
+    };
+
+    const handleCreateClick = () => {
+        setFormData({ amount: '', category: '', period: 'monthly' });
+        setModalState({ isOpen: true, mode: 'create', budget: null });
+    };
+
+    const handleSaveBudget = () => {
+        if (!formData.amount || !formData.category) return; // Basic validation
+
+        const budgetData = {
+            id: modalState.mode === 'edit' ? modalState.budget.id : Date.now(),
+            amount: Number(formData.amount),
+            category: formData.category,
+            period: formData.period,
+            // Logic for spent/remaining happens in useMemo or backend, data just stores config
+        };
+
+        if (modalState.mode === 'edit') {
+            updateBudget(budgetData);
+        } else {
+            addBudget(budgetData);
+        }
+        setModalState({ ...modalState, isOpen: false });
+    };
+
+    const handleConfirmDelete = () => {
+        if (deleteModal.budgetId) {
+            deleteBudget(deleteModal.budgetId);
+            setDeleteModal({ isOpen: false, budgetId: null });
+        }
+    };
 
     // Calculate budget progress
     const budgetsWithProgress = useMemo(() => {
@@ -74,7 +127,7 @@ const Budgets = ({ limit, simpleMode = false }) => {
                     </div>
                     <button
                         className="btn-primary"
-                        onClick={() => setShowCreateModal(true)}
+                        onClick={handleCreateClick}
                     >
                         <Plus size={20} />
                         {t('budgets.create')}
@@ -109,31 +162,65 @@ const Budgets = ({ limit, simpleMode = false }) => {
                                         </div>
                                     </div>
                                     <div className="budget-actions">
-                                        <div className="total-amount">{formatAmount(budget.amount)}</div>
-                                        <div className="actions-row">
-                                            <button className="action-btn"><Edit2 size={16} /></button>
-                                            <button className="action-btn delete"><Trash2 size={16} /></button>
+                                        <div className="total-amount">
+                                            {simpleMode
+                                                ? <>{formatAmount(budget.amount)} <span style={{ color: 'var(--text-muted)', fontSize: '0.8em' }}>/</span> <span style={{ color: 'var(--color-success)' }}>{formatAmount(budget.remaining)}</span></>
+                                                : formatAmount(budget.amount)
+                                            }
                                         </div>
+                                        {!simpleMode && (
+                                            <div className="actions-row">
+                                                <button
+                                                    className="action-btn"
+                                                    onClick={() => handleEditClick(budget)}
+                                                >
+                                                    <Edit2 size={16} />
+                                                </button>
+                                                <button
+                                                    className="action-btn delete"
+                                                    onClick={() => handleDeleteClick(budget.id)}
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
                                 <div className="progress-section">
-                                    <div className="progress-labels">
-                                        <span>{formatAmount(budget.spent)}</span>
-                                        <span>{Math.round(budget.percentage)}%</span>
-                                    </div>
-                                    <div className="progress-bar-bg">
-                                        <div
-                                            className="progress-bar-fill"
-                                            style={{
-                                                width: `${budget.percentage}%`,
-                                                backgroundColor: budget.percentage > 90 ? 'var(--color-cancel)' : color
-                                            }}
-                                        />
-                                    </div>
-                                    <div className="remaining-label">
-                                        {t('budgets.remaining')} <span className="remaining-value">{formatAmount(budget.remaining)}</span>
-                                    </div>
+                                    {simpleMode ? (
+                                        <>
+                                            <span className="widget-pct">{Math.round(budget.percentage)}%</span>
+                                            <div className="progress-bar-bg">
+                                                <div
+                                                    className="progress-bar-fill"
+                                                    style={{
+                                                        width: `${budget.percentage}%`,
+                                                        backgroundColor: budget.percentage > 90 ? 'var(--color-cancel)' : color
+                                                    }}
+                                                />
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <div className="progress-labels">
+                                                <span>{formatAmount(budget.spent)}</span>
+                                                <span>{Math.round(budget.percentage)}%</span>
+                                            </div>
+                                            <div className="progress-bar-bg">
+                                                <div
+                                                    className="progress-bar-fill"
+                                                    style={{
+                                                        width: `${budget.percentage}%`,
+                                                        backgroundColor: budget.percentage > 90 ? 'var(--color-cancel)' : color
+                                                    }}
+                                                />
+                                            </div>
+                                            <div className="remaining-label">
+                                                {t('budgets.remaining')} <span className="remaining-value">{formatAmount(budget.remaining)}</span>
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         );
@@ -141,28 +228,44 @@ const Budgets = ({ limit, simpleMode = false }) => {
                 </div>
             )}
 
-            {showCreateModal && (
-                <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
+
+
+            <ConfirmationModal
+                isOpen={deleteModal.isOpen}
+                onClose={() => setDeleteModal({ isOpen: false, budgetId: null })}
+                onConfirm={handleConfirmDelete}
+                title={t('budgets.deleteConfirmTitle') || t('common.deleteConfirmTitle')}
+                message={t('budgets.deleteConfirm') || t('common.deleteConfirm')}
+            />
+
+            {modalState.isOpen && (
+                <div className="modal-overlay" onClick={() => setModalState({ ...modalState, isOpen: false })}>
                     <div className="modal-content" onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>{t('budgets.createModalTitle')}</h2>
-                            <button className="close-btn" onClick={() => setShowCreateModal(false)}>×</button>
+                            <h2>{modalState.mode === 'edit' ? (t('budgets.editModalTitle') || 'Edit Budget') : t('budgets.createModalTitle')}</h2>
+                            <button className="close-btn" onClick={() => setModalState({ ...modalState, isOpen: false })}>×</button>
                         </div>
-
-
 
                         <div className="form-group">
                             <label>{t('budgets.amountLabel')}</label>
                             <div className="amount-input">
                                 <span className="currency-symbol">₺</span>
-                                <input type="number" placeholder="0.00" />
+                                <input
+                                    type="number"
+                                    placeholder="0.00"
+                                    value={formData.amount}
+                                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                                />
                             </div>
                         </div>
 
                         <div className="form-row">
                             <div className="form-group">
                                 <label>{t('budgets.categoryLabel')}</label>
-                                <select>
+                                <select
+                                    value={formData.category}
+                                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                                >
                                     <option value="">{t('budgets.selectCategory')}</option>
                                     {expenseCategories.map(cat => (
                                         <option key={cat.id} value={cat.name.toLowerCase()}>
@@ -173,7 +276,10 @@ const Budgets = ({ limit, simpleMode = false }) => {
                             </div>
                             <div className="form-group">
                                 <label>{t('budgets.periodLabel')}</label>
-                                <select>
+                                <select
+                                    value={formData.period}
+                                    onChange={(e) => setFormData({ ...formData, period: e.target.value })}
+                                >
                                     <option value="monthly">{t('budgets.periods.monthly')}</option>
                                     <option value="weekly">{t('budgets.periods.weekly')}</option>
                                     <option value="yearly">{t('budgets.periods.yearly')}</option>
@@ -184,12 +290,12 @@ const Budgets = ({ limit, simpleMode = false }) => {
                         <div className="modal-actions">
                             <button
                                 className="btn-secondary"
-                                onClick={() => setShowCreateModal(false)}
+                                onClick={() => setModalState({ ...modalState, isOpen: false })}
                             >
                                 {t('common.cancel')}
                             </button>
-                            <button className="btn-primary">
-                                {t('budgets.create')}
+                            <button className="btn-primary" onClick={handleSaveBudget}>
+                                {modalState.mode === 'edit' ? (t('common.save') || 'Save') : t('budgets.create')}
                             </button>
                         </div>
                     </div>
@@ -207,6 +313,79 @@ const Budgets = ({ limit, simpleMode = false }) => {
                 .budgets-container.widget-mode {
                     padding-bottom: 0;
                     margin: 0;
+                }
+
+                .budgets-container.widget-mode .budgets-grid {
+                    grid-template-columns: 1fr;
+                    gap: 8px;
+                }
+
+                .budgets-container.widget-mode .budget-card {
+                    display: grid;
+                    grid-template-columns: auto 1fr auto;
+                    gap: 12px;
+                    align-items: center;
+                    padding: 8px 16px;
+                    border-radius: 12px;
+                }
+                
+                .budgets-container.widget-mode .card-top {
+                    display: contents;
+                }
+
+                .budgets-container.widget-mode .budget-header {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                }
+
+                .budgets-container.widget-mode .budget-actions {
+                    order: 3;
+                    text-align: right;
+                    display: block; /* Ensure it shows, just ordered last */
+                }
+
+                .budgets-container.widget-mode .progress-section {
+                    order: 2;
+                    margin: 0;
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    gap: 8px;
+                    justify-content: flex-start;
+                }
+                
+                .widget-pct {
+                    font-size: 0.8rem;
+                    font-weight: 600;
+                    color: var(--text-muted);
+                    min-width: 36px;
+                    text-align: right;
+                }
+
+                .budgets-container.widget-mode .progress-bar-bg {
+                    flex: 1;
+                    height: 6px;
+                }
+
+                .budgets-container.widget-mode .icon-wrapper {
+                    width: 32px;
+                    height: 32px;
+                }
+
+                .budgets-container.widget-mode .budget-info h3 {
+                    font-size: 0.9rem;
+                    margin: 0;
+                }
+
+                .budgets-container.widget-mode .period-badge,
+                .budgets-container.widget-mode .progress-labels,
+                .budgets-container.widget-mode .remaining-label {
+                    display: none;
+                }
+
+                .budgets-container.widget-mode .total-amount {
+                    font-size: 0.9rem;
                 }
 
                 .page-header {

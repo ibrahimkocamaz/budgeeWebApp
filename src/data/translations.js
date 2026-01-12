@@ -89,7 +89,13 @@ export const translations = {
             create: "Create",
             edit: "Edit",
             delete: "Delete",
-            save: "Save"
+            edit: "Edit",
+            delete: "Delete",
+            save: "Save",
+            save: "Save",
+            selectCategory: "Select Category",
+            deleteConfirmTitle: "Delete Transaction",
+            deleteConfirm: "Are you sure you want to delete this transaction? This action cannot be undone."
         },
         time: {
             today: "Today",
@@ -118,7 +124,12 @@ export const translations = {
                 monthly: "Monthly",
                 weekly: "Weekly",
                 yearly: "Yearly"
-            }
+            },
+            deleteConfirmTitle: "Delete Budget",
+            deleteConfirmTitle: "Delete Budget",
+            deleteConfirm: "Are you sure you want to delete this budget?",
+            editModalTitle: "Edit Budget",
+            save: "Save Budget"
         },
         transactions: {
             emptyTitle: "No transactions found"
@@ -213,8 +224,13 @@ export const translations = {
             cancel: "Cancelar",
             create: "Crear",
             edit: "Editar",
+            edit: "Editar",
             delete: "Eliminar",
-            save: "Guardar"
+            selectCategory: "Seleccionar Categoría",
+            selectCategory: "Seleccionar Categoría",
+            save: "Guardar",
+            deleteConfirmTitle: "Eliminar Transacción",
+            deleteConfirm: "¿Estás seguro de que quieres eliminar esta transacción? Esta acción no se puede deshacer."
         },
         time: {
             today: "Hoy",
@@ -243,7 +259,12 @@ export const translations = {
                 monthly: "Mensual",
                 weekly: "Semanal",
                 yearly: "Anual"
-            }
+            },
+            deleteConfirmTitle: "Eliminar Presupuesto",
+            deleteConfirmTitle: "Eliminar Presupuesto",
+            deleteConfirm: "¿Estás seguro de que quieres eliminar este presupuesto?",
+            editModalTitle: "Editar Presupuesto",
+            save: "Guardar Presupuesto"
         },
         transactions: {
             emptyTitle: "No se encontraron transacciones"
@@ -339,7 +360,9 @@ export const translations = {
             create: "Criar",
             edit: "Editar",
             delete: "Excluir",
-            save: "Salvar"
+            save: "Salvar",
+            deleteConfirmTitle: "Excluir Transação",
+            deleteConfirm: "Tem certeza que deseja excluir esta transação? Esta ação não pode ser desfeita."
         },
         time: {
             today: "Hoje",
@@ -368,7 +391,12 @@ export const translations = {
                 monthly: "Mensal",
                 weekly: "Semanal",
                 yearly: "Anual"
-            }
+            },
+            deleteConfirmTitle: "Excluir Orçamento",
+            deleteConfirmTitle: "Excluir Orçamento",
+            deleteConfirm: "Tem certeza que deseja excluir este orçamento?",
+            editModalTitle: "Editar Orçamento",
+            save: "Salvar Orçamento"
         },
         transactions: {
             emptyTitle: "Nenhuma transação encontrada"
@@ -464,7 +492,10 @@ export const translations = {
             create: "Oluştur",
             edit: "Düzenle",
             delete: "Sil",
-            save: "Kaydet"
+            save: "Kaydet",
+            selectCategory: "Kategori Seçin",
+            deleteConfirmTitle: "İşlemi Sil",
+            deleteConfirm: "Bu işlemi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz."
         },
         time: {
             today: "Bugün",
@@ -493,7 +524,12 @@ export const translations = {
                 monthly: "Aylık",
                 weekly: "Haftalık",
                 yearly: "Yıllık"
-            }
+            },
+            deleteConfirmTitle: "Bütçeyi Sil",
+            deleteConfirmTitle: "Bütçeyi Sil",
+            deleteConfirm: "Bu bütçeyi silmek istediğinizden emin misiniz?",
+            editModalTitle: "Bütçeyi Düzenle",
+            save: "Bütçeyi Kaydet"
         },
         transactions: {
             emptyTitle: "İşlem bulunamadı"

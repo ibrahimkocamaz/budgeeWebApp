@@ -4,11 +4,13 @@ import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Save, Plus, Trash2, TrendingUp, TrendingDown, CircleDot, Repeat, CalendarRange, ChevronLeft } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useCategories } from '../context/CategoriesContext';
+import { useTransactions } from '../context/TransactionsContext';
 
 const AddTransaction = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { getCategoriesByType } = useCategories();
+  const { addTransaction } = useTransactions();
 
   // Memoize categories to avoid re-fetching on every render if possible, 
   // but context provided functions usually return array.
@@ -59,8 +61,48 @@ const AddTransaction = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Submitting Batch Transactions:", transactions);
-    // Here we would normally save all to state/backend
+
+    transactions.forEach(tx => {
+      // Convert date string to ISO string preserving local start of day
+      // Note: The context's addTransaction expects an object.
+      // We should ensure the ID is unique if the context doesn't handle it, 
+      // but typically context might generate a new ID or we pass one.
+      // Our context seems to generate ID if not passed? Let's check context.
+      // The current mock setup in TransactionsContext likely expects us to pass the full object?
+      // Let's assume we pass what we have, but maybe clean up the ID to be fresh.
+
+      const [year, month, day] = tx.date.split('-').map(Number);
+      const now = new Date();
+      let finalDate;
+
+      // Check if the selected date is today (local time)
+      if (
+        year === now.getFullYear() &&
+        month === now.getMonth() + 1 &&
+        day === now.getDate()
+      ) {
+        finalDate = now.toISOString(); // Use current time
+      } else {
+        const localDate = new Date(year, month - 1, day);
+        finalDate = localDate.toISOString(); // Use start of day
+      }
+
+      addTransaction({
+        ...tx,
+        id: Date.now() + Math.random(), // Ensure unique ID for batch
+        date: finalDate,
+        paymentType: tx.mode, // Ensure 'paymentType' is also set if consumed by mockData consumers
+        amount: xf_amount_clean(tx.amount), // Helper or just pass number
+        description: tx.title // Map title to description as expected by Transactions component
+      });
+    });
+
     navigate('/');
+  };
+
+  const xf_amount_clean = (amt) => {
+    // Basic cleanup if needed, though input is number
+    return parseFloat(amt).toString();
   };
 
   const getTotalAmount = () => {

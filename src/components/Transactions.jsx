@@ -1,23 +1,83 @@
-import React, { useState, useMemo } from 'react';
-import { Search, Filter, ArrowUpRight, ArrowDownRight, RefreshCw, Calendar, Edit2, Trash2 } from 'lucide-react';
-import { mockTransactions } from '../data/mockData';
+import { Search, Filter, ArrowUpRight, ArrowDownRight, RefreshCw, Calendar, Edit2, Trash2, Check, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useTransactions } from '../context/TransactionsContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useCurrency } from '../context/CurrencyContext';
+import { useCategories } from '../context/CategoriesContext';
+import React, { useState, useMemo } from 'react';
 import { getCategoryIcon, getCategoryColor } from '../data/categoryOptions';
+import ConfirmationModal from './ConfirmationModal';
 
 const Transactions = ({ limit, showControls = true }) => {
+
     const { t, language } = useLanguage();
     const { formatAmount } = useCurrency();
+    const { transactions: allTransactions, deleteTransaction, updateTransaction } = useTransactions();
+    const { getCategoriesByType } = useCategories();
+    const navigate = useNavigate();
     const [filter, setFilter] = useState('all'); // all, income, expense
     const [timeFilter, setTimeFilter] = useState('month'); // today, week, month, custom
     const [customDateRange, setCustomDateRange] = useState({ start: '', end: '' });
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [categoryFilter, setCategoryFilter] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [deleteModal, setDeleteModal] = useState({ isOpen: false, txId: null });
+
+    // Inline Editing State
+    const [editingId, setEditingId] = useState(null);
+    const [editForm, setEditForm] = useState({
+        date: '',
+        type: 'expense',
+        category: '',
+        description: '',
+        amount: ''
+    });
+
+    const handleEditClick = (tx) => {
+        setEditingId(tx.id);
+        setEditForm({
+            date: tx.date.split('T')[0],
+            type: tx.type,
+            category: tx.category,
+            description: tx.description,
+            amount: tx.amount
+        });
+    };
+
+    const handleSaveEdit = (originalTx) => {
+        // Create date object from local date string to preserve the selected day
+        const [year, month, day] = editForm.date.split('-').map(Number);
+        const localDate = new Date(year, month - 1, day);
+
+        updateTransaction({
+            ...originalTx,
+            date: localDate.toISOString(),
+            type: editForm.type,
+            category: editForm.category,
+            description: editForm.description,
+            amount: editForm.amount
+        });
+        setEditingId(null);
+    };
+
+    const handleCancelEdit = () => {
+        setEditingId(null);
+    };
+
+    const handleDeleteClick = (id) => {
+        setDeleteModal({ isOpen: true, txId: id });
+    };
+
+    const handleConfirmDelete = () => {
+        if (deleteModal.txId) {
+            deleteTransaction(deleteModal.txId);
+            setDeleteModal({ isOpen: false, txId: null });
+        }
+    };
 
     // 1. Base Filter (Time and Search)
     const baseTransactions = useMemo(() => {
-        return mockTransactions.filter(tx => {
+        return allTransactions.filter(tx => {
             const matchesSearch =
                 tx.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 tx.category.toLowerCase().includes(searchTerm.toLowerCase());
@@ -55,7 +115,7 @@ const Transactions = ({ limit, showControls = true }) => {
 
             return matchesSearch && matchesTime;
         });
-    }, [searchTerm, timeFilter, customDateRange]);
+    }, [searchTerm, timeFilter, customDateRange, allTransactions]);
 
     // 2. Available Categories (Based on Base + Type Filter)
     const availableCategories = useMemo(() => {
@@ -243,6 +303,64 @@ const Transactions = ({ limit, showControls = true }) => {
                             {transactions.map(tx => {
                                 const Icon = getCategoryIcon(tx.category);
                                 const isRecurring = tx.paymentType === 'installment' || tx.recurring === 1;
+                                const isEditing = editingId === tx.id;
+
+                                if (isEditing) {
+                                    const editModeCategories = getCategoriesByType(editForm.type);
+
+                                    return (
+                                        <div key={tx.id} className="transaction-item editing">
+                                            <div className="edit-form-row">
+                                                <input
+                                                    type="date"
+                                                    className="edit-input date"
+                                                    value={editForm.date}
+                                                    onChange={(e) => setEditForm({ ...editForm, date: e.target.value })}
+                                                />
+                                                <select
+                                                    className="edit-input type"
+                                                    value={editForm.type}
+                                                    onChange={(e) => setEditForm({ ...editForm, type: e.target.value, category: '' })}
+                                                >
+                                                    <option value="income">{t('dashboard.income')}</option>
+                                                    <option value="expense">{t('dashboard.expenses')}</option>
+                                                </select>
+                                                <select
+                                                    className="edit-input category"
+                                                    value={editForm.category}
+                                                    onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                                                >
+                                                    <option value="">{t('common.selectCategory') || 'Select Category'}</option>
+                                                    {editModeCategories.map(cat => (
+                                                        <option key={cat.id} value={cat.name.toLowerCase()}>{t(`categoryNames.${cat.name.toLowerCase()}`) || cat.name}</option>
+                                                    ))}
+                                                </select>
+                                                <input
+                                                    type="text"
+                                                    className="edit-input description"
+                                                    placeholder="Description"
+                                                    value={editForm.description}
+                                                    onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                                                />
+                                                <input
+                                                    type="number"
+                                                    className="edit-input amount"
+                                                    placeholder="Amount"
+                                                    value={editForm.amount}
+                                                    onChange={(e) => setEditForm({ ...editForm, amount: e.target.value })}
+                                                />
+                                                <div className="tx-actions">
+                                                    <button className="action-btn save" onClick={() => handleSaveEdit(tx)}>
+                                                        <Check size={16} />
+                                                    </button>
+                                                    <button className="action-btn cancel" onClick={handleCancelEdit}>
+                                                        <X size={16} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                }
 
                                 return (
                                     <div key={tx.id} className="transaction-item">
@@ -275,16 +393,21 @@ const Transactions = ({ limit, showControls = true }) => {
                                             </div>
                                         </div>
 
-                                        <div className={`amount ${tx.type === 'income' ? 'positive' : 'negative'}`}>
-                                            {tx.type === 'income' ? '+' : '-'}
-                                            {formatAmount(tx.amount)}
-                                        </div>
+                                        <span className={`amount ${tx.type === 'income' ? 'positive' : 'negative'}`}>
+                                            {tx.type === 'income' ? '+' : '-'}{formatAmount(tx.amount)}
+                                        </span>
 
                                         <div className="tx-actions">
-                                            <button className="action-btn edit" title="Edit">
+                                            <button
+                                                className="action-btn"
+                                                onClick={() => handleEditClick(tx)}
+                                            >
                                                 <Edit2 size={16} />
                                             </button>
-                                            <button className="action-btn delete" title="Delete">
+                                            <button
+                                                className="action-btn delete"
+                                                onClick={() => handleDeleteClick(tx.id)}
+                                            >
                                                 <Trash2 size={16} />
                                             </button>
                                         </div>
@@ -304,6 +427,14 @@ const Transactions = ({ limit, showControls = true }) => {
                     </div>
                 )}
             </div>
+
+            <ConfirmationModal
+                isOpen={deleteModal.isOpen}
+                onClose={() => setDeleteModal({ isOpen: false, txId: null })}
+                onConfirm={handleConfirmDelete}
+                title={t('common.deleteConfirmTitle') || 'Delete Transaction'}
+                message={t('common.deleteConfirm') || 'Are you sure you want to delete this transaction? This action cannot be undone.'}
+            />
 
             <style>{`
                 .transactions-wrapper.full-page {
@@ -435,7 +566,7 @@ const Transactions = ({ limit, showControls = true }) => {
                 }
 
                 .date-input-group input {
-                    background-color: var(--bg-main);
+                    background-color: var(--bg-card);
                     border: 1px solid var(--color-input-border);
                     border-radius: 6px;
                     padding: 8px;
@@ -619,11 +750,11 @@ const Transactions = ({ limit, showControls = true }) => {
                     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                 }
 
-                .transaction-item:hover .amount {
+                .transaction-item:not(.editing):hover .amount {
                     transform: translateX(-70px);
                 }
 
-                .transaction-item:hover .tx-actions {
+                .transaction-item:not(.editing):hover .tx-actions {
                     opacity: 1;
                     transform: translateY(-50%) translateX(0);
                     pointer-events: auto;
@@ -648,8 +779,77 @@ const Transactions = ({ limit, showControls = true }) => {
                 }
 
                 .action-btn.delete:hover {
-                    background-color: rgba(220, 38, 38, 0.1);
-                    color: var(--color-accent-red);
+                    color: #ef4444;
+                    background-color: rgba(239, 68, 68, 0.1);
+                }
+
+                /* Inline Edit Styles */
+                .transaction-item.editing {
+                    padding: 12px;
+                    border: 1px solid var(--text-main);
+                    border-radius: 12px;
+                }
+
+                .transaction-item.editing .tx-actions {
+                    position: static;
+                    opacity: 1;
+                    pointer-events: auto;
+                    transform: none;
+                    transition: none;
+                }
+
+                .edit-form-row {
+                    display: flex;
+                    gap: 12px;
+                    align-items: center;
+                    width: 100%;
+                }
+
+                .edit-input {
+                    background-color: var(--bg-card);
+                    border: 1px solid var(--color-input-border);
+                    border-radius: 6px;
+                    padding: 8px;
+                    color: var(--text-main);
+                    font-size: 0.875rem;
+                    color-scheme: light dark;
+                }
+
+                select.edit-input {
+                    background-color: var(--bg-card);
+                    color: var(--text-main);
+                }
+
+                .edit-input option {
+                    background-color: var(--bg-card);
+                    color: var(--text-main);
+                }
+
+                .edit-input.date { width: 130px; }
+                
+                /* Fix date picker icon visibility in light mode */
+                [data-theme='light'] .edit-input::-webkit-calendar-picker-indicator {
+                    filter: invert(1);
+                    cursor: pointer;
+                }
+                
+                .edit-input.type { width: 100px; }
+                .edit-input.category { width: 140px; }
+                .edit-input.description { flex: 1; }
+                .edit-input.amount { width: 100px; text-align: right; }
+
+                .action-btn.save {
+                    color: var(--color-success, #2ecc71);
+                }
+                .action-btn.save:hover {
+                    background-color: rgba(46, 204, 113, 0.1);
+                }
+
+                .action-btn.cancel {
+                    color: var(--text-muted);
+                }
+                .action-btn.cancel:hover {
+                    background-color: rgba(0,0,0,0.05);
                 }
 
                 .empty-state {
