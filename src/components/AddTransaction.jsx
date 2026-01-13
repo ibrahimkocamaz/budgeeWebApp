@@ -18,7 +18,19 @@ const AddTransaction = () => {
   const incomeCategories = getCategoriesByType('income');
 
   const [transactions, setTransactions] = useState([
-    { id: 1, type: 'expense', mode: 'single', date: new Date().toISOString().split('T')[0], category: '', title: '', amount: '', merchant: '' }
+    {
+      id: 1,
+      type: 'expense',
+      mode: 'single',
+      date: new Date().toISOString().split('T')[0],
+      category: '',
+      title: '',
+      amount: '',
+      merchant: '',
+      recurringCount: 1,
+      recurringFrequency: 'monthly',
+      recurringPricingMode: 'unit'
+    }
   ]);
   const [activeModeRowId, setActiveModeRowId] = useState(null);
 
@@ -33,7 +45,10 @@ const AddTransaction = () => {
         category: '',
         title: '',
         amount: '',
-        merchant: ''
+        merchant: '',
+        recurringCount: 1,
+        recurringFrequency: 'monthly',
+        recurringPricingMode: 'unit'
       }
     ]);
   };
@@ -63,38 +78,50 @@ const AddTransaction = () => {
     console.log("Submitting Batch Transactions:", transactions);
 
     transactions.forEach(tx => {
-      // Convert date string to ISO string preserving local start of day
-      // Note: The context's addTransaction expects an object.
-      // We should ensure the ID is unique if the context doesn't handle it, 
-      // but typically context might generate a new ID or we pass one.
-      // Our context seems to generate ID if not passed? Let's check context.
-      // The current mock setup in TransactionsContext likely expects us to pass the full object?
-      // Let's assume we pass what we have, but maybe clean up the ID to be fresh.
+      const baseDate = new Date(tx.date); // This treats YYYY-MM-DD as UTC, but since we just want to manipulate date parts, let's parse component-wise to be safe
+      const [y, m, d] = tx.date.split('-').map(Number);
+      // Create a local date object for the start
+      // Note: month in Date is 0-indexed
 
-      const [year, month, day] = tx.date.split('-').map(Number);
-      const now = new Date();
-      let finalDate;
+      const count = tx.mode === 'recurring' ? parseInt(tx.recurringCount) || 1 : 1;
+      const originalAmount = parseFloat(tx.amount) || 0;
 
-      // Check if the selected date is today (local time)
-      if (
-        year === now.getFullYear() &&
-        month === now.getMonth() + 1 &&
-        day === now.getDate()
-      ) {
-        finalDate = now.toISOString(); // Use current time
-      } else {
-        const localDate = new Date(year, month - 1, day);
-        finalDate = localDate.toISOString(); // Use start of day
+      // Calculate amount per transaction
+      let amountPerTx = originalAmount;
+      if (tx.mode === 'recurring' && tx.recurringPricingMode === 'total') {
+        amountPerTx = originalAmount / count;
       }
 
-      addTransaction({
-        ...tx,
-        id: Date.now() + Math.random(), // Ensure unique ID for batch
-        date: finalDate,
-        paymentType: tx.mode, // Ensure 'paymentType' is also set if consumed by mockData consumers
-        amount: xf_amount_clean(tx.amount), // Helper or just pass number
-        description: tx.title // Map title to description as expected by Transactions component
-      });
+      const seriesId = tx.mode === 'recurring' ? `series_${Date.now()}_${Math.random().toString(36).substr(2, 9)}` : null;
+
+      for (let i = 0; i < count; i++) {
+        // Calculate Date
+        let txDate = new Date(y, m - 1, d);
+
+        if (i > 0) {
+          if (tx.recurringFrequency === 'weekly') {
+            txDate.setDate(txDate.getDate() + (i * 7));
+          } else if (tx.recurringFrequency === 'monthly') {
+            txDate.setMonth(txDate.getMonth() + i);
+          } else if (tx.recurringFrequency === 'yearly') {
+            txDate.setFullYear(txDate.getFullYear() + i);
+          }
+        }
+
+        addTransaction({
+          ...tx,
+          id: Date.now() + Math.random(),
+          date: txDate.toISOString(),
+          paymentType: tx.mode,
+          amount: amountPerTx.toString(),
+          description: tx.title,
+          // Add metadata for recurring
+          recurring: tx.mode === 'recurring' ? 1 : 0,
+          recurringSeriesId: seriesId,
+          recurringTransactionCount: i + 1,
+          totalRecurringTransactions: count
+        });
+      }
     });
 
     navigate('/');
@@ -146,13 +173,7 @@ const AddTransaction = () => {
                         >
                           {t('addTransaction.recurring') || 'Recurring'}
                         </button>
-                        <button
-                          type="button"
-                          className={`mode-btn-small ${tx.mode === 'installment' ? 'active' : ''}`}
-                          onClick={() => { handleChange(tx.id, 'mode', 'installment'); setActiveModeRowId(null); }}
-                        >
-                          {t('addTransaction.installment') || 'Installment'}
-                        </button>
+
                       </>
                     ) : (
                       <button
@@ -165,6 +186,58 @@ const AddTransaction = () => {
                       </button>
                     )}
                   </div>
+
+                  {tx.mode === 'recurring' && (
+                    <div className="recurring-inline-controls">
+                      <div className="inline-field">
+                        <label>{t('addTransaction.count')}</label>
+                        <input
+                          type="number"
+                          min="2"
+                          value={tx.recurringCount}
+                          onChange={(e) => handleChange(tx.id, 'recurringCount', e.target.value)}
+                          className="tiny-input"
+                        />
+                      </div>
+                      <div className="inline-field">
+                        <label>{t('addTransaction.frequency')}</label>
+                        <select
+                          value={tx.recurringFrequency}
+                          onChange={(e) => handleChange(tx.id, 'recurringFrequency', e.target.value)}
+                          className="tiny-select"
+                        >
+                          <option value="weekly">{t('addTransaction.weekly')}</option>
+                          <option value="monthly">{t('addTransaction.monthly')}</option>
+                          <option value="yearly">{t('addTransaction.yearly')}</option>
+                        </select>
+                      </div>
+                      <div className="inline-field pricing-field">
+                        {tx.recurringPricingMode === 'total' && tx.amount && tx.recurringCount > 0 && (
+                          <span className="split-helper-text">
+                            {(parseFloat(tx.amount) / parseInt(tx.recurringCount)).toFixed(2)} {t(`addTransaction.per${tx.recurringFrequency.replace('ly', '').charAt(0).toUpperCase() + tx.recurringFrequency.replace('ly', '').slice(1)}`)}
+                          </span>
+                        )}
+                        <div className="toggle-pill tiny">
+                          <button
+                            type="button"
+                            className={`pill-btn ${tx.recurringPricingMode === 'unit' ? 'active' : ''}`}
+                            onClick={() => handleChange(tx.id, 'recurringPricingMode', 'unit')}
+                            title={t('addTransaction.unit')}
+                          >
+                            {t('addTransaction.unit')}
+                          </button>
+                          <button
+                            type="button"
+                            className={`pill-btn ${tx.recurringPricingMode === 'total' ? 'active' : ''}`}
+                            onClick={() => handleChange(tx.id, 'recurringPricingMode', 'total')}
+                            title={t('addTransaction.total')}
+                          >
+                            {t('addTransaction.total')}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {transactions.length > 1 && (
                     <button
@@ -484,6 +557,11 @@ const AddTransaction = () => {
                     justify-content: center;
                 }
 
+                .pill-btn.active {
+                    background-color: var(--color-brand);
+                    color: white;
+                }
+
                 .pill-btn.active.expense {
                     background-color: var(--color-accent-red);
                     color: white;
@@ -615,8 +693,110 @@ const AddTransaction = () => {
                         padding-bottom: 80px;
                     }
                 }
+
+                /* Recurring Inline Options */
+                .recurring-inline-controls {
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                    margin-left: 12px;
+                    padding-left: 12px;
+                    border-left: 1px solid var(--color-divider);
+                }
+
+                .inline-field {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    font-size: 0.75rem;
+                    color: var(--text-muted);
+                }
+
+                .inline-field label {
+                    white-space: nowrap;
+                    font-weight: 500;
+                }
+
+                .tiny-input {
+                    background-color: var(--bg-app);
+                    border: 1px solid var(--color-input-border);
+                    border-radius: 6px;
+                    padding: 4px 8px;
+                    color: var(--text-main);
+                    font-size: 0.8rem;
+                    width: 60px; /* Fixed small width for count */
+                    outline: none;
+                }
+
+                .tiny-select {
+                    background-color: var(--bg-app);
+                    border: 1px solid var(--color-input-border);
+                    border-radius: 6px;
+                    padding: 4px 8px;
+                    color: var(--text-main);
+                    font-size: 0.8rem;
+                    width: auto;
+                    min-width: 80px;
+                    outline: none;
+                }
+
+                .tiny-input:focus, .tiny-select:focus {
+                    border-color: var(--color-brand);
+                }
+
+                .inline-field.pricing-field {
+                    flex-direction: column;
+                    align-items: flex-start;
+                    justify-content: center;
+                    gap: 2px;
+                    position: relative; /* Anchor for absolute text */
+                }
+
+                .split-helper-text {
+                    position: absolute;
+                    top: -16px; /* Position above the buttons */
+                    left: 2px;
+                    font-size: 0.65rem;
+                    color: var(--color-brand);
+                    font-weight: 600;
+                    white-space: nowrap;
+                    pointer-events: none;
+                }
+
+                .toggle-pill.tiny {
+                     padding: 1px;
+                     display: flex; /* Ensure flex layout */
+                }
+
+                .toggle-pill.tiny .pill-btn {
+                    font-size: 0.75rem;
+                    padding: 4px 12px; /* More horizontal padding */
+                    white-space: nowrap; /* Prevent wrapping */
+                }
+
+                /* Mobile wrap for header actions if too wide */
+                @media (max-width: 900px) {
+                  .row-header {
+                      flex-wrap: wrap; 
+                  }
+                  .row-header-actions {
+                      width: 100%;
+                      flex-wrap: wrap;
+                      gap: 8px;
+                      margin-top: 8px;
+                  }
+                  .recurring-inline-controls {
+                      margin-left: 0;
+                      padding-left: 0;
+                      border-left: none;
+                      width: 100%;
+                      overflow-x: auto; /* Scroll if needed on very small screens */
+                      padding-bottom: 4px;
+                  }
+                }
             `}</style>
-    </div>
+
+    </div >
   );
 };
 

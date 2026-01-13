@@ -26,12 +26,27 @@ export const TransactionsProvider = ({ children }) => {
         setTransactions(prev => prev.filter(tx => tx.id !== id));
     };
 
+    const deleteTransactions = (ids) => {
+        const idSet = new Set(ids);
+        setTransactions(prev => prev.filter(tx => !idSet.has(tx.id)));
+    };
+
+    const updateTransactions = (updates) => {
+        // updates is an array of full transaction objects
+        const updateMap = new Map(updates.map(tx => [tx.id, tx]));
+        setTransactions(prev => prev.map(tx =>
+            updateMap.has(tx.id) ? updateMap.get(tx.id) : tx
+        ));
+    };
+
     return (
         <TransactionsContext.Provider value={{
             transactions,
             addTransaction,
             updateTransaction,
-            deleteTransaction
+            deleteTransaction,
+            deleteTransactions,
+            updateTransactions
         }}>
             {children}
         </TransactionsContext.Provider>

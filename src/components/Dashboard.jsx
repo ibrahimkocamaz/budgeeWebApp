@@ -6,13 +6,35 @@ import Budgets from './Budgets';
 import Transactions from './Transactions';
 import { useLanguage } from '../context/LanguageContext';
 import { useCurrency } from '../context/CurrencyContext';
+import { useCategories } from '../context/CategoriesContext';
 import { useTransactions } from '../context/TransactionsContext';
+import { useRecurringSeries } from '../hooks/useRecurringSeries';
+import { getCategoryIcon, getCategoryColor as getDefaultCategoryColor } from '../data/categoryOptions';
 
 
 const Dashboard = () => {
+  const { categories } = useCategories();
   const { t } = useLanguage();
   const { formatAmount } = useCurrency();
   const { transactions } = useTransactions();
+  const recurringSeries = useRecurringSeries();
+
+  const upcomingRecurring = useMemo(() => {
+    const now = new Date();
+    const thirtyDaysFromNow = new Date();
+    thirtyDaysFromNow.setDate(now.getDate() + 60);
+
+    return recurringSeries.filter(series => {
+      if (!series.nextDueDate || series.isCompleted) return false;
+      const dueDate = new Date(series.nextDueDate);
+      return dueDate >= now && dueDate <= thirtyDaysFromNow;
+    }).slice(0, 4); // Limit to top 4
+  }, [recurringSeries]);
+
+  const getCategoryColor = (name) => {
+    const cat = categories.find(c => c.name.toLowerCase() === (name || '').toLowerCase());
+    return cat ? cat.color : getDefaultCategoryColor(name);
+  };
 
   const summary = useMemo(() => {
     const now = new Date();
@@ -42,7 +64,7 @@ const Dashboard = () => {
 
       return acc;
     }, { totalBalance: 12500, income: 0, expenses: 0 });
-  }, []);
+  }, [transactions]);
 
   return (
     <div className="dashboard-container">
@@ -87,15 +109,50 @@ const Dashboard = () => {
             </div>
           </section>
 
-          {/* Recent Transactions */}
-          <section className="transactions-section">
-            <div className="section-header">
-              <h2>{t('dashboard.recentTransactions')}</h2>
-              <Link to="/transactions" className="btn-link">{t('dashboard.viewAll')}</Link>
+          {/* Transactions Split Section */}
+          <section className="transactions-split-section">
+            {/* Recent Transactions Widget */}
+            <div className="transactions-widget">
+              <div className="widget-header">
+                <h2>{t('dashboard.recentTransactions')}</h2>
+                <Link to="/transactions" className="btn-link">{t('dashboard.viewAll')}</Link>
+              </div>
+              <div className="transactions-list-widget">
+                <Transactions limit={5} showControls={false} />
+              </div>
             </div>
 
-            <div className="transactions-list-widget">
-              <Transactions limit={5} showControls={false} />
+            {/* Upcoming Recurring Widget */}
+            <div className="recurring-widget">
+              <div className="widget-header">
+                <h2>{t('dashboard.upcomingRecurring')}</h2>
+                <Link to="/recurring" className="btn-link">{t('dashboard.viewAllRecurring') || 'View All'}</Link>
+              </div>
+
+              {upcomingRecurring.length > 0 ? (
+                <div className="upcoming-list">
+                  {upcomingRecurring.map(series => (
+                    <div key={series.id} className="upcoming-item">
+                      <div className="upcoming-icon" style={{ backgroundColor: getCategoryColor(series.category) }}>
+                        {React.createElement(getCategoryIcon(series.category) || DollarSign, { size: 20 })}
+                      </div>
+                      <div className="upcoming-info">
+                        <div className="upcoming-name">{series.description}</div>
+                        <div className={`upcoming-date ${new Date(series.nextDueDate) - new Date() < 3 * 24 * 60 * 60 * 1000 ? 'urgent' : ''}`}>
+                          {new Date(series.nextDueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                        </div>
+                      </div>
+                      <div className={`upcoming-amount ${series.type}`}>
+                        {series.type === 'income' ? '+' : ''}{formatAmount(series.amount)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="empty-recurring">
+                  {t('dashboard.noUpcomingRecurring') || 'No upcoming payments'}
+                </div>
+              )}
             </div>
           </section>
         </div>
@@ -147,11 +204,8 @@ const Dashboard = () => {
 
         @media (max-width: 1200px) {
            .summary-cards-row {
-              grid-template-columns: 1fr; /* Stack cards on smaller screens? Or resize? */
+              grid-template-columns: 1fr;
            }
-           /* Perhaps 3 columns is too tight on 1024px split 2/3?
-              2/3 of 1024 is ~680px. 680/3 = 226px per card. This is fine.
-           */
         }
         
         @media (max-width: 1024px) {
@@ -164,12 +218,131 @@ const Dashboard = () => {
           }
         }
 
+        /* Transactions Split Section */
+        .transactions-split-section {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+          .transactions-split-section {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        .transactions-widget, .recurring-widget {
+          background-color: var(--bg-card);
+          border-radius: 1rem;
+          border: 1px solid var(--color-divider);
+          padding: 1.5rem;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .widget-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .widget-header h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .btn-link {
+          background: none;
+          border: none;
+          color: var(--color-brand);
+          cursor: pointer;
+          font-weight: 500;
+          text-decoration: none;
+          font-size: 0.9rem;
+        }
+
+        /* Upcoming List - Grouped Style */
+        .upcoming-list {
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--color-divider);
+            overflow: hidden;
+        }
+
+        .upcoming-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border-bottom: 1px solid var(--color-divider);
+            background-color: transparent;
+            transition: background-color 0.2s;
+        }
+
+        .upcoming-item:last-child {
+            border-bottom: none;
+        }
+        
+        .upcoming-item:hover {
+            background-color: rgba(0,0,0,0.04);
+        }
+
+        .upcoming-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .upcoming-info {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .upcoming-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .upcoming-date {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        
+        .upcoming-date.urgent {
+            color: var(--color-cancel);
+            font-weight: 600;
+        }
+
+        .upcoming-amount {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .upcoming-amount.income {
+            color: var(--color-success);
+        }
+
+        .empty-recurring {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 2rem 0;
+            font-size: 0.9rem;
+        }
+
         /* Budgets Section */
         .budgets-section {
-          /* background-color: var(--bg-card); */
-          /* border-radius: 1rem; */
-          /* border: 1px solid var(--color-divider); */
-          /* padding: 1.5rem; */
           display: flex;
           flex-direction: column;
         }
@@ -183,7 +356,7 @@ const Dashboard = () => {
           display: flex;
           flex-direction: column;
           position: sticky;
-          top: 24px; /* Sticky sidebar effect */
+          top: 24px; 
         }
 
         .card {
@@ -257,33 +430,11 @@ const Dashboard = () => {
           border-radius: 4px;
         }
 
-        /* Transactions Section */
-        .transactions-section {
-          background-color: var(--bg-card);
-          border-radius: 1rem;
-          border: 1px solid var(--color-divider);
-          padding: 1.5rem;
-        }
-
         .section-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 1.5rem;
-        }
-
-        .btn-link {
-          background: none;
-          border: none;
-          color: var(--color-brand);
-          cursor: pointer;
-          font-weight: 500;
-        }
-
-        .transactions-list {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
         }
 
       `}</style>

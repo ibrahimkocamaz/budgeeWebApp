@@ -1,16 +1,26 @@
 import React, { useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-import { mockTransactions } from '../data/mockData';
+import { useTransactions } from '../context/TransactionsContext';
 import { getCategoryColor, getCategoryIcon } from '../data/categoryOptions';
 import { useCurrency } from '../context/CurrencyContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useCategories } from '../context/CategoriesContext';
 
 const SpendingChart = () => {
     const { formatAmount } = useCurrency();
     const { t } = useLanguage();
+    const { categories } = useCategories();
+    const { transactions } = useTransactions();
 
     const spendingData = useMemo(() => {
-        const expenses = mockTransactions.filter(t => t.type === 'expense');
+        const expenses = transactions.filter(t => t.type === 'expense');
+
+        // Fast lookup map for category details
+        const catLookup = categories.reduce((acc, c) => {
+            acc[c.name.toLowerCase()] = c;
+            return acc;
+        }, {});
+
         const categoryMap = {};
 
         expenses.forEach(tx => {
@@ -22,14 +32,17 @@ const SpendingChart = () => {
         });
 
         return Object.entries(categoryMap)
-            .map(([name, value]) => ({
-                name: t(`categoryNames.${name}`) || (name.charAt(0).toUpperCase() + name.slice(1)),
-                value,
-                color: getCategoryColor(name),
-                icon: getCategoryIcon(name)
-            }))
+            .map(([name, value]) => {
+                const categoryObj = catLookup[name.toLowerCase()];
+                return {
+                    name: t(`categoryNames.${name}`) || (name.charAt(0).toUpperCase() + name.slice(1)),
+                    value,
+                    color: categoryObj ? categoryObj.color : getCategoryColor(name),
+                    icon: categoryObj ? getCategoryIcon(categoryObj.iconKey) : getCategoryIcon(name)
+                };
+            })
             .sort((a, b) => b.value - a.value);
-    }, [t]);
+    }, [transactions, categories, t]);
 
     const total = spendingData.reduce((acc, item) => acc + item.value, 0);
 

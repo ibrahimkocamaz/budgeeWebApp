@@ -1,12 +1,40 @@
 import { Lock, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { useSettings } from '../context/SettingsContext';
 
 const Settings = () => {
-    const { t } = useLanguage();
+    const { t, language, changeLanguage } = useLanguage();
+    const { settings, updateSetting } = useSettings();
 
     return (
         <div className="settings-container">
             <h2 className="settings-title">{t('settings.title')}</h2>
+
+            {/* General Section */}
+            <section className="settings-section">
+                <h3 className="section-title">{t('settings.general') || 'General'}</h3>
+                <div className="settings-card">
+                    <div className="settings-item">
+                        <div className="item-left">
+                            <div className="icon-circle">
+                                <ChevronRight size={20} style={{ transform: 'rotate(90deg)' }} />
+                            </div>
+                            <span>{t('settings.startOfWeek') || 'Start of Week'}</span>
+                        </div>
+                        <div className="item-right">
+                            <select
+                                className="settings-select"
+                                value={settings.startOfWeek}
+                                onChange={(e) => updateSetting('startOfWeek', e.target.value)}
+                            >
+                                <option value="sunday">{t('days.sunday') || 'Sunday'}</option>
+                                <option value="monday">{t('days.monday') || 'Monday'}</option>
+                                <option value="saturday">{t('days.saturday') || 'Saturday'}</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
             {/* Security Section */}
             <section className="settings-section">

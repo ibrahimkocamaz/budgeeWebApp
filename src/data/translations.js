@@ -14,11 +14,15 @@ export const translations = {
             title: "Dashboard",
             addTransaction: "Add Transaction",
             totalBalance: "Total Balance",
+            balance: "Balance",
             income: "Income",
             expenses: "Expenses",
             recentTransactions: "Recent Transactions",
             viewAll: "View All",
-            spendingByCategory: "Spending by Category"
+            spendingByCategory: "Spending by Category",
+            upcomingRecurring: "Upcoming Payments",
+            noUpcomingRecurring: "No upcoming payments for 30 days",
+            viewAllRecurring: "View Recurring"
         },
         settings: {
             title: "Settings",
@@ -28,7 +32,14 @@ export const translations = {
             language: "Language",
             currency: "Currency",
             security: "Security",
-            changePassword: "Change Password"
+            changePassword: "Change Password",
+            general: "General",
+            startOfWeek: "Start of Week"
+        },
+        days: {
+            sunday: "Sunday",
+            monday: "Monday",
+            saturday: "Saturday"
         },
         categories: {
             expense: "Expense",
@@ -73,7 +84,18 @@ export const translations = {
             save: "Save Transaction",
             single: "Single",
             recurring: "Recurring",
-            installment: "Installment"
+            installment: "Installment",
+            count: 'Count',
+            frequency: 'Frequency',
+            weekly: 'Weekly',
+            monthly: 'Monthly',
+            yearly: 'Yearly',
+            pricingMode: 'Pricing',
+            unit: 'Unit Price',
+            total: 'Total Split',
+            perWeek: '/ week',
+            perMonth: '/ month',
+            perYear: '/ year'
         },
         currencies: {
             USD: "United States Dollar",
@@ -131,6 +153,22 @@ export const translations = {
             editModalTitle: "Edit Budget",
             save: "Save Budget"
         },
+        recurring: {
+            title: "Recurring Transactions",
+            noRecurringTitle: "No Recurring Transactions",
+            noRecurringDesc: "Add a recurring transaction to track subscriptions or installments.",
+            progress: "Progress",
+            nextDue: "Next Due",
+            remaining: "Remaining",
+            completed: "Completed",
+            cancelSeries: "Cancel Series",
+            cancelConfirm: "Are you sure you want to cancel future transactions for this series? This cannot be undone.",
+            editFuturePrice: "Edit Future Price",
+            newAmount: "New Amount",
+            update: "Update",
+            confirmTitle: "Confirm Cancellation",
+            confirm: "Confirm"
+        },
         transactions: {
             emptyTitle: "No transactions found"
         }
@@ -150,11 +188,15 @@ export const translations = {
             title: "Panel Principal",
             addTransaction: "Añadir Transacción",
             totalBalance: "Balance Total",
+            balance: "Balance",
             income: "Ingresos",
             expenses: "Gastos",
             recentTransactions: "Transacciones Recientes",
             viewAll: "Ver Todo",
-            spendingByCategory: "Gastos por Categoría"
+            spendingByCategory: "Gastos por Categoría",
+            upcomingRecurring: "Próximos Pagos",
+            noUpcomingRecurring: "Sin pagos en 30 días",
+            viewAllRecurring: "Ver Recurrentes"
         },
         settings: {
             title: "Ajustes",
@@ -164,7 +206,14 @@ export const translations = {
             language: "Idioma",
             currency: "Moneda",
             security: "Seguridad",
-            changePassword: "Cambiar Contraseña"
+            changePassword: "Cambiar Contraseña",
+            general: "General",
+            startOfWeek: "Inicio de Semana"
+        },
+        days: {
+            sunday: "Domingo",
+            monday: "Lunes",
+            saturday: "Sábado"
         },
         categories: {
             expense: "Gastos",
@@ -266,6 +315,22 @@ export const translations = {
             editModalTitle: "Editar Presupuesto",
             save: "Guardar Presupuesto"
         },
+        recurring: {
+            title: "Transacciones Recurrentes",
+            noRecurringTitle: "No hay transacciones recurrentes",
+            noRecurringDesc: "Añade una transacción recurrente para controlar suscripciones o plazos.",
+            progress: "Progreso",
+            nextDue: "Próximo Vencimiento",
+            remaining: "Restante",
+            completed: "Completado",
+            cancelSeries: "Cancelar Serie",
+            cancelConfirm: "¿Estás seguro de que quieres cancelar las transacciones futuras de esta serie? Esto no se puede deshacer.",
+            editFuturePrice: "Editar Precio Futuro",
+            newAmount: "Nuevo Precio",
+            update: "Actualizar",
+            confirmTitle: "Confirmar Cancelación",
+            confirm: "Confirmar"
+        },
         transactions: {
             emptyTitle: "No se encontraron transacciones"
         }
@@ -285,11 +350,15 @@ export const translations = {
             title: "Painel Principal",
             addTransaction: "Nova Transação",
             totalBalance: "Saldo Total",
+            balance: "Saldo",
             income: "Receitas",
             expenses: "Despesas",
             recentTransactions: "Transações Recentes",
             viewAll: "Ver Tudo",
-            spendingByCategory: "Despesas por Categoria"
+            spendingByCategory: "Despesas por Categoria",
+            upcomingRecurring: "Próximos Pagamentos",
+            noUpcomingRecurring: "Sem pagamentos em 30 dias",
+            viewAllRecurring: "Ver Recorrentes"
         },
         settings: {
             title: "Configurações",
@@ -299,7 +368,14 @@ export const translations = {
             language: "Idioma",
             currency: "Moeda",
             security: "Segurança",
-            changePassword: "Alterar Senha"
+            changePassword: "Alterar Senha",
+            general: "Geral",
+            startOfWeek: "Início da Semana"
+        },
+        days: {
+            sunday: "Domingo",
+            monday: "Segunda-feira",
+            saturday: "Sábado"
         },
         categories: {
             expense: "Despesas",
@@ -398,6 +474,22 @@ export const translations = {
             editModalTitle: "Editar Orçamento",
             save: "Salvar Orçamento"
         },
+        recurring: {
+            title: "Transações Recorrentes",
+            noRecurringTitle: "Sem transações recorrentes",
+            noRecurringDesc: "Adicione uma transação recorrente para acompanhar assinaturas ou parcelas.",
+            progress: "Progresso",
+            nextDue: "Próximo Vencimento",
+            remaining: "Restante",
+            completed: "Concluído",
+            cancelSeries: "Cancelar Série",
+            cancelConfirm: "Tem certeza que deseja cancelar as futuras transações desta série? Esta ação não pode ser desfeita.",
+            editFuturePrice: "Editar Preço Futuro",
+            newAmount: "Novo Valor",
+            update: "Atualizar",
+            confirmTitle: "Confirmar Cancelamento",
+            confirm: "Confirmar"
+        },
         transactions: {
             emptyTitle: "Nenhuma transação encontrada"
         }
@@ -417,11 +509,15 @@ export const translations = {
             title: "Kontrol Paneli",
             addTransaction: "İşlem Ekle",
             totalBalance: "Toplam Bakiye",
+            balance: "Bakiye",
             income: "Gelir",
             expenses: "Gider",
             recentTransactions: "Son İşlemler",
             viewAll: "Tümünü Gör",
-            spendingByCategory: "Kategori Bazlı Harcama"
+            spendingByCategory: "Kategori Bazlı Harcama",
+            upcomingRecurring: "Yaklaşan Ödemeler",
+            noUpcomingRecurring: "30 gün içinde ödeme yok",
+            viewAllRecurring: "Tümünü Gör"
         },
         settings: {
             title: "Ayarlar",
@@ -431,7 +527,14 @@ export const translations = {
             language: "Dil",
             currency: "Para Birimi",
             security: "Güvenlik",
-            changePassword: "Şifre Değiştir"
+            changePassword: "Şifre Değiştir",
+            general: "Genel",
+            startOfWeek: "Hafta Başlangıcı"
+        },
+        days: {
+            sunday: "Pazar",
+            monday: "Pazartesi",
+            saturday: "Cumartesi"
         },
         categories: {
             expense: "Gider",
@@ -475,8 +578,20 @@ export const translations = {
             merchantPlaceholder: "ör. Migros",
             save: "İşlemi Kaydet",
             single: "Tek Seferlik",
-            recurring: "Düzenli",
-            installment: "Taksitli"
+            recurring: 'Tekrarlı',
+            installment: 'Taksit',
+            count: 'Adet',
+            frequency: 'Sıklık',
+            weekly: 'Haftalık',
+            monthly: 'Aylık',
+            yearly: 'Yıllık',
+            pricingMode: 'Fiyatlandırma',
+            unit: 'Birim Fiyat',
+            total: 'Toplam Böl',
+            perWeek: '/ hafta',
+            perMonth: '/ ay',
+            perYear: '/ yıl',
+            expense: 'Gider'
         },
         currencies: {
             USD: "Amerikan Doları",
@@ -530,6 +645,22 @@ export const translations = {
             deleteConfirm: "Bu bütçeyi silmek istediğinizden emin misiniz?",
             editModalTitle: "Bütçeyi Düzenle",
             save: "Bütçeyi Kaydet"
+        },
+        recurring: {
+            title: "Düzenli İşlemler",
+            noRecurringTitle: "Düzenli İşlem Yok",
+            noRecurringDesc: "Abonelikleri veya taksitleri takip etmek için düzenli işlem ekleyin.",
+            progress: "İlerleme",
+            nextDue: "Sonraki Ödeme",
+            remaining: "Kalan",
+            completed: "Tamamlandı",
+            cancelSeries: "Seriyi İptal Et",
+            cancelConfirm: "Bu seri için gelecekteki işlemleri iptal etmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+            editFuturePrice: "Gelecek Fiyatı Düzenle",
+            newAmount: "Yeni Tutar",
+            update: "Güncelle",
+            confirmTitle: "İptali Onayla",
+            confirm: "Onayla"
         },
         transactions: {
             emptyTitle: "İşlem bulunamadı"

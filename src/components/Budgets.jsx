@@ -4,15 +4,18 @@ import { useLanguage } from '../context/LanguageContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { useCategories } from '../context/CategoriesContext';
 import { useBudgets } from '../context/BudgetsContext';
-import { mockTransactions } from '../data/mockData';
+import { useTransactions } from '../context/TransactionsContext';
+import { useSettings } from '../context/SettingsContext';
 import { getCategoryIcon, getCategoryColor } from '../data/categoryOptions';
 import ConfirmationModal from './ConfirmationModal';
 
 const Budgets = ({ limit, simpleMode = false }) => {
     const { t } = useLanguage();
     const { formatAmount } = useCurrency();
-    const { getCategoriesByType } = useCategories();
-    const { budgets, deleteBudget, addBudget, updateBudget } = useBudgets();
+    const { getCategoriesByType, categories } = useCategories();
+    const { budgets, deleteBudget, addBudget, updateBudget, } = useBudgets();
+    const { transactions } = useTransactions();
+    const { settings } = useSettings();
     const expenseCategories = getCategoriesByType('expense');
 
     // const [budgets, setBudgets] = useState(mockBudgets); // REPLACED BY CONTEXT
@@ -83,20 +86,27 @@ const Budgets = ({ limit, simpleMode = false }) => {
                 return date.getFullYear() === currentYear && date.getMonth() === currentMonth;
             }
             if (period === 'weekly') {
-                // Simple current week check (Sun-Sat)
-                const oneJan = new Date(currentYear, 0, 1);
-                const numberOfDays = Math.floor((now - oneJan) / (24 * 60 * 60 * 1000));
-                const currentWeek = Math.ceil((now.getDay() + 1 + numberOfDays) / 7);
+                const startDayMap = { 'sunday': 0, 'monday': 1, 'saturday': 6 };
+                const startDay = startDayMap[settings.startOfWeek] || 0;
 
-                const dateNumberOfDays = Math.floor((date - oneJan) / (24 * 60 * 60 * 1000));
-                const dateWeek = Math.ceil((date.getDay() + 1 + dateNumberOfDays) / 7);
-                return date.getFullYear() === currentYear && currentWeek === dateWeek;
+                // Current Week Range
+                const startOfWeek = new Date(now);
+                const currentDay = now.getDay();
+                const diff = (currentDay - startDay + 7) % 7;
+                startOfWeek.setDate(now.getDate() - diff);
+                startOfWeek.setHours(0, 0, 0, 0);
+
+                const endOfWeek = new Date(startOfWeek);
+                endOfWeek.setDate(startOfWeek.getDate() + 6);
+                endOfWeek.setHours(23, 59, 59, 999);
+
+                return date >= startOfWeek && date <= endOfWeek;
             }
             return false;
         };
 
         return budgets.map(budget => {
-            const spent = mockTransactions
+            const spent = transactions
                 .filter(tx =>
                     tx.category === budget.category &&
                     tx.type === 'expense' &&
@@ -115,7 +125,7 @@ const Budgets = ({ limit, simpleMode = false }) => {
             return sorted.slice(0, limit);
         }
         return sorted;
-    }, [budgets, limit]);
+    }, [budgets, limit, transactions]);
 
     return (
         <div className={`budgets-container ${simpleMode ? 'widget-mode' : ''}`}>
@@ -146,8 +156,16 @@ const Budgets = ({ limit, simpleMode = false }) => {
             ) : (
                 <div className="budgets-grid">
                     {budgetsWithProgress.map(budget => {
-                        const Icon = getCategoryIcon(budget.category);
-                        const color = getCategoryColor(budget.category);
+                        const categoryObj = categories.find(c => c.name.toLowerCase() === budget.category.toLowerCase());
+                        const Icon = categoryObj ? getCategoryIcon(categoryObj.iconKey) : getCategoryIcon(budget.category);
+                        const color = categoryObj ? categoryObj.color : getCategoryColor(budget.category);
+
+                        let progressColor = 'var(--color-success)';
+                        if (budget.percentage > 90) {
+                            progressColor = 'var(--color-cancel)';
+                        } else if (budget.percentage > 80) {
+                            progressColor = 'var(--color-warning)';
+                        }
 
                         return (
                             <div key={budget.id} className="budget-card">
@@ -164,7 +182,7 @@ const Budgets = ({ limit, simpleMode = false }) => {
                                     <div className="budget-actions">
                                         <div className="total-amount">
                                             {simpleMode
-                                                ? <>{formatAmount(budget.amount)} <span style={{ color: 'var(--text-muted)', fontSize: '0.8em' }}>/</span> <span style={{ color: 'var(--color-success)' }}>{formatAmount(budget.remaining)}</span></>
+                                                ? <>{formatAmount(budget.spent)} <span style={{ color: 'var(--text-muted)', fontSize: '0.8em' }}>/</span> <span style={{ color: 'var(--text-muted)' }}>{formatAmount(budget.amount)}</span></>
                                                 : formatAmount(budget.amount)
                                             }
                                         </div>
@@ -196,7 +214,7 @@ const Budgets = ({ limit, simpleMode = false }) => {
                                                     className="progress-bar-fill"
                                                     style={{
                                                         width: `${budget.percentage}%`,
-                                                        backgroundColor: budget.percentage > 90 ? 'var(--color-cancel)' : color
+                                                        backgroundColor: progressColor
                                                     }}
                                                 />
                                             </div>
@@ -212,7 +230,7 @@ const Budgets = ({ limit, simpleMode = false }) => {
                                                     className="progress-bar-fill"
                                                     style={{
                                                         width: `${budget.percentage}%`,
-                                                        backgroundColor: budget.percentage > 90 ? 'var(--color-cancel)' : color
+                                                        backgroundColor: progressColor
                                                     }}
                                                 />
                                             </div>
@@ -322,7 +340,7 @@ const Budgets = ({ limit, simpleMode = false }) => {
 
                 .budgets-container.widget-mode .budget-card {
                     display: grid;
-                    grid-template-columns: auto 1fr auto;
+                    grid-template-columns: 1fr auto auto;
                     gap: 12px;
                     align-items: center;
                     padding: 8px 16px;
@@ -337,6 +355,20 @@ const Budgets = ({ limit, simpleMode = false }) => {
                     display: flex;
                     align-items: center;
                     gap: 12px;
+                    min-width: 0; /* Enable flex child truncation */
+                }
+
+                .budgets-container.widget-mode .budget-info {
+                    min-width: 0; /* Enable flex child truncation */
+                    overflow: hidden;
+                }
+
+                .budgets-container.widget-mode .budget-info h3 {
+                    font-size: 0.9rem;
+                    margin: 0;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
                 }
 
                 .budgets-container.widget-mode .budget-actions {
@@ -364,8 +396,9 @@ const Budgets = ({ limit, simpleMode = false }) => {
                 }
 
                 .budgets-container.widget-mode .progress-bar-bg {
-                    flex: 1;
+                    width: 120px;
                     height: 6px;
+                    flex: none; /* Prevent flexing */
                 }
 
                 .budgets-container.widget-mode .icon-wrapper {
@@ -373,10 +406,7 @@ const Budgets = ({ limit, simpleMode = false }) => {
                     height: 32px;
                 }
 
-                .budgets-container.widget-mode .budget-info h3 {
-                    font-size: 0.9rem;
-                    margin: 0;
-                }
+
 
                 .budgets-container.widget-mode .period-badge,
                 .budgets-container.widget-mode .progress-labels,
@@ -408,7 +438,7 @@ const Budgets = ({ limit, simpleMode = false }) => {
 
                 .budgets-grid {
                     display: grid;
-                    grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+                    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
                     gap: 1.5rem;
                 }
                 

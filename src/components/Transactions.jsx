@@ -1,8 +1,9 @@
-import { Search, Filter, ArrowUpRight, ArrowDownRight, RefreshCw, Calendar, Edit2, Trash2, Check, X } from 'lucide-react';
+import { Search, Filter, ArrowUpRight, ArrowDownRight, RefreshCw, Calendar, Edit2, Trash2, Check, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTransactions } from '../context/TransactionsContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useCurrency } from '../context/CurrencyContext';
+import { useSettings } from '../context/SettingsContext';
 import { useCategories } from '../context/CategoriesContext';
 import React, { useState, useMemo } from 'react';
 import { getCategoryIcon, getCategoryColor } from '../data/categoryOptions';
@@ -12,8 +13,9 @@ const Transactions = ({ limit, showControls = true }) => {
 
     const { t, language } = useLanguage();
     const { formatAmount } = useCurrency();
+    const { settings } = useSettings();
     const { transactions: allTransactions, deleteTransaction, updateTransaction } = useTransactions();
-    const { getCategoriesByType } = useCategories();
+    const { getCategoriesByType, categories } = useCategories();
     const navigate = useNavigate();
     const [filter, setFilter] = useState('all'); // all, income, expense
     const [timeFilter, setTimeFilter] = useState('month'); // today, week, month, custom
@@ -21,6 +23,21 @@ const Transactions = ({ limit, showControls = true }) => {
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [categoryFilter, setCategoryFilter] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [selectedDate, setSelectedDate] = useState(new Date());
+
+    const goToPreviousMonth = () => {
+        const newDate = new Date(selectedDate);
+        newDate.setMonth(newDate.getMonth() - 1);
+        setSelectedDate(newDate);
+        setTimeFilter('month');
+    };
+
+    const goToNextMonth = () => {
+        const newDate = new Date(selectedDate);
+        newDate.setMonth(newDate.getMonth() + 1);
+        setSelectedDate(newDate);
+        setTimeFilter('month');
+    };
     const [deleteModal, setDeleteModal] = useState({ isOpen: false, txId: null });
 
     // Inline Editing State
@@ -90,8 +107,14 @@ const Transactions = ({ limit, showControls = true }) => {
             if (timeFilter === 'today') {
                 matchesTime = txDate.toDateString() === now.toDateString();
             } else if (timeFilter === 'week') {
+                const startDayMap = { 'sunday': 0, 'monday': 1, 'saturday': 6 };
+                const startDay = startDayMap[settings.startOfWeek] || 0; // Default Sunday
+
                 const startOfWeek = new Date(now);
-                startOfWeek.setDate(now.getDate() - now.getDay());
+                const currentDay = now.getDay();
+                const diff = (currentDay - startDay + 7) % 7;
+
+                startOfWeek.setDate(now.getDate() - diff);
                 startOfWeek.setHours(0, 0, 0, 0);
 
                 const endOfWeek = new Date(startOfWeek);
@@ -100,7 +123,8 @@ const Transactions = ({ limit, showControls = true }) => {
 
                 matchesTime = txDate >= startOfWeek && txDate <= endOfWeek;
             } else if (timeFilter === 'month') {
-                matchesTime = txDate.getMonth() === now.getMonth() && txDate.getFullYear() === now.getFullYear();
+                // Use selectedDate instead of now
+                matchesTime = txDate.getMonth() === selectedDate.getMonth() && txDate.getFullYear() === selectedDate.getFullYear();
             } else if (timeFilter === 'custom') {
                 if (customDateRange.start && customDateRange.end) {
                     const startDate = new Date(customDateRange.start);
@@ -115,7 +139,7 @@ const Transactions = ({ limit, showControls = true }) => {
 
             return matchesSearch && matchesTime;
         });
-    }, [searchTerm, timeFilter, customDateRange, allTransactions]);
+    }, [searchTerm, timeFilter, customDateRange, allTransactions, selectedDate, settings]);
 
     // 2. Available Categories (Based on Base + Type Filter)
     const availableCategories = useMemo(() => {
@@ -159,6 +183,14 @@ const Transactions = ({ limit, showControls = true }) => {
         return groups;
     }, [filteredTransactions]);
 
+    // Create a map for fast category lookup
+    const categoryMap = useMemo(() => {
+        return categories.reduce((acc, cat) => {
+            acc[cat.name.toLowerCase()] = cat;
+            return acc;
+        }, {});
+    }, [categories]);
+
     const getRelativeDateLabel = (dateString) => {
         const date = new Date(dateString);
         const today = new Date();
@@ -170,14 +202,48 @@ const Transactions = ({ limit, showControls = true }) => {
         return date.toLocaleDateString(language, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     };
 
+    // Calculate Monthly Totals
+    const monthlyTotals = useMemo(() => {
+        const currentMonthRefStr = selectedDate.toISOString().slice(0, 7); // YYYY-MM
+
+        return allTransactions.reduce((acc, tx) => {
+            if (tx.date.startsWith(currentMonthRefStr)) {
+                const amount = parseFloat(tx.amount) || 0;
+                if (tx.type === 'income') {
+                    acc.income += amount;
+                } else {
+                    acc.expense += amount;
+                }
+            }
+            return acc;
+        }, { income: 0, expense: 0 });
+    }, [allTransactions, selectedDate]);
+
+    const monthlyBalance = monthlyTotals.income - monthlyTotals.expense;
+
     return (
         <div className={`transactions-wrapper ${showControls ? 'full-page' : 'widget-mode'}`}>
             {showControls && (
                 <>
                     <div className="page-header">
-                        <div>
-                            <h2 className="title">{t('sidebar.transactions')}</h2>
-                            <p className="subtitle">{filteredTransactions.length} {t('common.items')}</p>
+                        {/* Title removed as per request */}
+
+                        {/* Summary Cards (Moved Here) */}
+                        <div className="summary-cards">
+                            <div className="summary-card income">
+                                <div className="card-label">{t('dashboard.income')}</div>
+                                <div className="card-value">+{formatAmount(monthlyTotals.income)}</div>
+                            </div>
+                            <div className="summary-card expense">
+                                <div className="card-label">{t('dashboard.expenses')}</div>
+                                <div className="card-value">-{formatAmount(monthlyTotals.expense)}</div>
+                            </div>
+                            <div className="summary-card balance">
+                                <div className="card-label">{t('dashboard.balance')}</div>
+                                <div className={`card-value ${monthlyBalance >= 0 ? 'pos' : 'neg'}`}>
+                                    {monthlyBalance >= 0 ? '+' : ''}{formatAmount(monthlyBalance)}
+                                </div>
+                            </div>
                         </div>
 
                         <div className="actions">
@@ -193,15 +259,24 @@ const Transactions = ({ limit, showControls = true }) => {
                         </div>
                     </div>
 
+
+
+
+
                     <div className="filters-container">
                         {/* Time Filters */}
                         <div className="time-filters">
-                            <button
-                                className={`time-btn ${timeFilter === 'month' ? 'active' : ''}`}
-                                onClick={() => setTimeFilter('month')}
-                            >
-                                {t('time.thisMonth')}
-                            </button>
+                            <div className={`month-navigator ${timeFilter === 'month' ? 'active' : ''}`}>
+                                <button className="nav-btn" onClick={goToPreviousMonth}>
+                                    <ChevronLeft size={16} />
+                                </button>
+                                <span className="current-month-label" onClick={() => setTimeFilter('month')}>
+                                    {selectedDate.toLocaleDateString(language, { month: 'long', year: 'numeric' })}
+                                </span>
+                                <button className="nav-btn" onClick={goToNextMonth}>
+                                    <ChevronRight size={16} />
+                                </button>
+                            </div>
                             <button
                                 className={`time-btn ${timeFilter === 'week' ? 'active' : ''}`}
                                 onClick={() => setTimeFilter('week')}
@@ -301,7 +376,9 @@ const Transactions = ({ limit, showControls = true }) => {
                         <h3 className="date-header">{getRelativeDateLabel(transactions[0].date)}</h3>
                         <div className="group-items">
                             {transactions.map(tx => {
-                                const Icon = getCategoryIcon(tx.category);
+                                const categoryObj = categoryMap[tx.category.toLowerCase()];
+                                const Icon = categoryObj ? getCategoryIcon(categoryObj.iconKey) : getCategoryIcon(tx.category);
+                                const color = categoryObj ? categoryObj.color : getCategoryColor(tx.category);
                                 const isRecurring = tx.paymentType === 'installment' || tx.recurring === 1;
                                 const isEditing = editingId === tx.id;
 
@@ -367,8 +444,8 @@ const Transactions = ({ limit, showControls = true }) => {
                                         <div
                                             className="icon-wrapper"
                                             style={{
-                                                backgroundColor: `${getCategoryColor(tx.category)}20`,
-                                                color: getCategoryColor(tx.category)
+                                                backgroundColor: `${color}20`,
+                                                color: color
                                             }}
                                         >
                                             <Icon size={20} />
@@ -452,6 +529,8 @@ const Transactions = ({ limit, showControls = true }) => {
                     justify-content: space-between;
                     align-items: center;
                     margin-bottom: 24px;
+                    gap: 24px;
+                    flex-wrap: wrap;
                 }
 
                 .title {
@@ -497,12 +576,105 @@ const Transactions = ({ limit, showControls = true }) => {
                     margin-bottom: 24px;
                 }
 
+                .summary-cards {
+                    display: flex;
+                    gap: 12px;
+                    /* margin-bottom removed as it is inside header now */
+                }
+
+                .summary-card {
+                    background-color: var(--bg-card);
+                    border: 1px solid var(--color-divider);
+                    border-radius: 12px;
+                    padding: 8px 12px;
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 12px;
+                    min-width: 140px;
+                }
+
+                .summary-card.income .card-value { color: var(--color-success); }
+                .summary-card.expense .card-value { color: var(--color-accent-red); }
+                .summary-card.balance .card-value.pos { color: var(--color-brand); }
+                .summary-card.balance .card-value.neg { color: var(--text-main); }
+
+                .card-label {
+                    font-size: 0.8rem;
+                    color: var(--text-muted);
+                    font-weight: 500;
+                }
+
+                .card-value {
+                    font-size: 0.95rem;
+                    font-weight: 700;
+                }
+
+                @media (max-width: 600px) {
+                    .summary-cards {
+                        grid-template-columns: 1fr;
+                        gap: 8px;
+                    }
+                    /* Card is already row based now via main class, so we verify layout */
+                    .summary-card {
+                        padding: 10px 14px;
+                    }
+                }
+
                 .time-filters {
                     display: flex;
                     gap: 8px;
                     flex-wrap: wrap;
                     overflow: visible;
                     padding-bottom: 4px;
+                }
+
+                .month-navigator {
+                    display: flex;
+                    align-items: center;
+                    background-color: var(--bg-card);
+                    border: 1px solid var(--color-divider);
+                    border-radius: 8px;
+                    padding: 2px;
+                    gap: 4px;
+                }
+
+                .month-navigator.active {
+                     border-color: var(--text-main);
+                     background-color: var(--bg-card); /* Keep card bg but highlight border or label */
+                }
+
+                .nav-btn {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 6px;
+                    border: none;
+                    background: none;
+                    color: var(--text-muted);
+                    cursor: pointer;
+                    border-radius: 6px;
+                    transition: all 0.2s;
+                }
+
+                .nav-btn:hover {
+                    background-color: rgba(255,255,255,0.05);
+                    color: var(--text-main);
+                }
+
+                .current-month-label {
+                    padding: 0 8px;
+                    font-size: 0.85rem;
+                    font-weight: 600;
+                    color: var(--text-main);
+                    cursor: pointer;
+                    min-width: 100px;
+                    text-align: center;
+                }
+
+                .month-navigator.active .current-month-label {
+                     color: var(--color-brand);
                 }
 
                 .time-btn {
