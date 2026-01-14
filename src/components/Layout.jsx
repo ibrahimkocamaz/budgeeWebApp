@@ -12,12 +12,12 @@ const Layout = ({ children }) => {
   const isActive = (path) => location.pathname === path;
   const [showModal, setShowModal] = useState(false);
   // Initialize collapsed state based on screen width
-  const [collapsed, setCollapsed] = useState(window.innerWidth <= 960);
+  const [collapsed, setCollapsed] = useState(window.innerWidth <= 1100);
 
   // Auto-collapse on resize
   React.useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth <= 960) {
+      if (window.innerWidth <= 1100) {
         setCollapsed(true);
       } else {
         setCollapsed(false);

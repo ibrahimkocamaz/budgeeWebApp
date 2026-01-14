@@ -5,15 +5,19 @@ import { useRecurringSeries } from '../hooks/useRecurringSeries';
 import { useLanguage } from '../context/LanguageContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { getCategoryIcon, getCategoryColor as getDefaultCategoryColor } from '../data/categoryOptions';
-import { Calendar, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { Calendar, CheckCircle, Clock, AlertCircle, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 
 const RecurringTransactions = () => {
+    const { transactions } = useTransactions(); // Need raw transactions for history
     const { deleteTransactions, updateTransactions } = useTransactions();
     const { categories } = useCategories();
-    const { t } = useLanguage();
+    const { t, tCategory, language } = useLanguage(); // Added language
     const { formatAmount } = useCurrency();
     const [editingSeriesId, setEditingSeriesId] = useState(null);
     const [editAmount, setEditAmount] = useState('');
+
+    // Right Column State
+    const [selectedDate, setSelectedDate] = useState(new Date());
 
     const recurringSeries = useRecurringSeries();
 
@@ -22,14 +26,70 @@ const RecurringTransactions = () => {
         return cat ? cat.color : getDefaultCategoryColor(name);
     };
 
-    const formatDate = (dateString) => {
+    const formatDate = (dateString, options = {}) => {
         if (!dateString) return '-';
         return new Date(dateString).toLocaleDateString(undefined, {
             year: 'numeric',
             month: 'short',
-            day: 'numeric'
+            day: 'numeric',
+            ...options
         });
     };
+
+    const goToPreviousMonth = () => {
+        const newDate = new Date(selectedDate);
+        newDate.setMonth(newDate.getMonth() - 1);
+        setSelectedDate(newDate);
+    };
+
+    const goToNextMonth = () => {
+        const newDate = new Date(selectedDate);
+        newDate.setMonth(newDate.getMonth() + 1);
+        setSelectedDate(newDate);
+    };
+
+    const formatMonthYear = (date) => {
+        return date.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+    };
+
+    // Calculate Monthly Items (History + Projection)
+    const monthlyItems = useMemo(() => {
+        const startOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+        const endOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0, 23, 59, 59);
+
+        // 1. History (Actual Transactions)
+        const history = transactions.filter(tx => {
+            if (tx.recurring !== 1 && !tx.recurringSeriesId) return false;
+            const d = new Date(tx.date);
+            return d >= startOfMonth && d <= endOfMonth;
+        }).map(tx => ({
+            ...tx,
+            status: 'paid', // It's in the log, so it's paid/recorded
+            seriesId: tx.recurringSeriesId
+        }));
+
+        // 2. Projections (Next Due Date from Series)
+        // Only if nextDueDate falls in this month
+        // 2. Projections (Next Due Date from Series)
+        // logic removed to prevent duplicates as useRecurringSeries derives dates from existing transactions
+        // which are already captured in the history block above.
+
+        const combined = [...history]
+            .filter(item => item.type === 'expense')
+            .sort((a, b) => new Date(a.date) - new Date(b.date));
+        return combined;
+    }, [selectedDate, transactions, recurringSeries]);
+
+
+    // Calculate Total for the month
+    const monthlyTotal = useMemo(() => {
+        return monthlyItems.reduce((sum, item) => {
+            const amount = parseFloat(item.amount);
+            return item.type === 'income' ? sum + amount : sum - amount;
+        }, 0);
+    }, [monthlyItems]);
+
+    const isTotalNegative = monthlyTotal < 0;
 
     const [confirmModal, setConfirmModal] = useState({ show: false, series: null });
 
@@ -76,106 +136,328 @@ const RecurringTransactions = () => {
 
     return (
         <div className="recurring-container">
-            {recurringSeries.length === 0 ? (
-                <div className="empty-state">
-                    <Clock size={48} className="empty-icon" />
-                    <h3>{t('recurring.noRecurringTitle')}</h3>
-                    <p>{t('recurring.noRecurringDesc')}</p>
-                </div>
-            ) : (
-                <div className="series-grid">
-                    {recurringSeries.map(series => (
-                        <div key={series.id} className={`series-card ${series.isCompleted ? 'completed' : ''}`}>
-                            <div className="series-header">
-                                <div className="series-icon" style={{ backgroundColor: getCategoryColor(series.category) }}>
-                                    {React.createElement(getCategoryIcon(series.category), { size: 24, color: 'white' })}
-                                </div>
-                                <div className="series-info">
-                                    <h3>{series.description}</h3>
-                                    <span className="series-category">
-                                        {t(`categoryNames.${(series.category || '').toLowerCase()}`) || series.category}
-                                        {series.frequency && (
-                                            <>
-                                                <span className="separator">•</span>
-                                                <span className="capitalize">{t(`addTransaction.${series.frequency}`) || series.frequency}</span>
-                                            </>
-                                        )}
-                                    </span>
-                                </div>
-                                <div className={`series-amount ${series.type}`}>
-                                    {series.type === 'income' ? '+' : '-'}{formatAmount(series.amount)}
-                                </div>
-                            </div>
-
-                            <div className="series-progress">
-                                <div className="progress-info">
-                                    <span>{t('recurring.progress')}</span>
-                                    <span>{series.paidCount} / {series.totalCount}</span>
-                                </div>
-                                <div className="progress-bar-bg">
-                                    <div
-                                        className="progress-bar-fill"
-                                        style={{
-                                            width: `${(series.paidCount / Math.max(series.totalCount, 1)) * 100}%`,
-                                            backgroundColor: getCategoryColor(series.category)
-                                        }}
-                                    ></div>
-                                </div>
-                            </div>
-
-                            <div className="series-details">
-                                <div className="detail-item">
-                                    <span className="label">{t('recurring.nextDue')}</span>
-                                    <span className="value">
-                                        {series.isCompleted ?
-                                            <span className="status-badge completed">{t('recurring.completed')}</span> :
-                                            formatDate(series.nextDueDate)
-                                        }
-                                    </span>
-                                </div>
-                                <div className="detail-item">
-                                    <span className="label">{t('recurring.remaining')}</span>
-                                    <span className="value">{formatAmount(series.remainingAmount)}</span>
-                                </div>
-                            </div>
-
-                            {/* Actions Footer */}
-                            {!series.isCompleted && (
-                                <div className="series-actions">
-                                    {editingSeriesId === series.id ? (
-                                        <div className="edit-mode-actions">
-                                            <input
-                                                type="number"
-                                                value={editAmount}
-                                                onChange={(e) => setEditAmount(e.target.value)}
-                                                className="edit-amount-input"
-                                                placeholder="New Amount"
-                                            />
-                                            <button className="action-btn save" onClick={() => saveEdit(series)}>Save</button>
-                                            <button className="action-btn cancel" onClick={() => setEditingSeriesId(null)}>Cancel</button>
+            <div className="recurring-page-layout">
+                {/* LEFT COLUMN: Series Cards */}
+                <div className="left-col">
+                    {recurringSeries.length === 0 ? (
+                        <div className="empty-state">
+                            <Clock size={48} className="empty-icon" />
+                            <h3>{t('recurring.noRecurringTitle')}</h3>
+                            <p>{t('recurring.noRecurringDesc')}</p>
+                        </div>
+                    ) : (
+                        <div className="series-grid">
+                            {recurringSeries.map(series => (
+                                <div key={series.id} className={`series-card ${series.isCompleted ? 'completed' : ''}`}>
+                                    <div className="series-header">
+                                        <div className="series-icon" style={{ backgroundColor: getCategoryColor(series.category) }}>
+                                            {React.createElement(getCategoryIcon(series.category), { size: 24, color: 'white' })}
                                         </div>
-                                    ) : (
-                                        <>
-                                            <button className="text-btn" onClick={() => startEdit(series)}>
-                                                {t('common.edit') || 'Edit Future Price'}
-                                            </button>
-                                            <button className="text-btn destructive" onClick={() => handleCancelSeries(series)}>
-                                                {t('common.cancel') || 'Cancel Series'}
-                                            </button>
-                                        </>
+                                        <div className="series-info">
+                                            <h3>{series.description}</h3>
+                                            <span className="series-category">
+                                                {tCategory(series.category)}
+                                                {series.frequency && (
+                                                    <>
+                                                        <span className="separator">•</span>
+                                                        <span className="capitalize">{t(`addTransaction.${series.frequency}`) || series.frequency}</span>
+                                                    </>
+                                                )}
+                                            </span>
+                                        </div>
+                                        <div className={`series-amount ${series.type}`}>
+                                            {series.type === 'income' ? '+' : '-'}{formatAmount(series.amount)}
+                                        </div>
+                                    </div>
+
+                                    <div className="series-progress">
+                                        <div className="progress-info">
+                                            <span>{t('recurring.progress')}</span>
+                                            <span>{series.paidCount} / {series.totalCount}</span>
+                                        </div>
+                                        <div className="progress-bar-bg">
+                                            <div
+                                                className="progress-bar-fill"
+                                                style={{
+                                                    width: `${(series.paidCount / Math.max(series.totalCount, 1)) * 100}%`,
+                                                    backgroundColor: getCategoryColor(series.category)
+                                                }}
+                                            ></div>
+                                        </div>
+                                    </div>
+
+                                    <div className="series-details">
+                                        <div className="detail-item">
+                                            <span className="label">{t('recurring.nextDue')}</span>
+                                            <span className="value">
+                                                {series.isCompleted ?
+                                                    <span className="status-badge completed">{t('recurring.completed')}</span> :
+                                                    formatDate(series.nextDueDate)
+                                                }
+                                            </span>
+                                        </div>
+                                        <div className="detail-item">
+                                            <span className="label">{t('recurring.remaining')}</span>
+                                            <span className="value">{formatAmount(series.remainingAmount)}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Actions Footer */}
+                                    {!series.isCompleted && (
+                                        <div className="series-actions">
+                                            {editingSeriesId === series.id ? (
+                                                <div className="edit-mode-actions">
+                                                    <input
+                                                        type="number"
+                                                        value={editAmount}
+                                                        onChange={(e) => setEditAmount(e.target.value)}
+                                                        className="edit-amount-input"
+                                                        placeholder="New Amount"
+                                                    />
+                                                    <button className="action-btn save" onClick={() => saveEdit(series)}>Save</button>
+                                                    <button className="action-btn cancel" onClick={() => setEditingSeriesId(null)}>Cancel</button>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <button className="text-btn" onClick={() => startEdit(series)}>
+                                                        {t('common.edit') || 'Edit Future Price'}
+                                                    </button>
+                                                    <button className="text-btn destructive" onClick={() => handleCancelSeries(series)}>
+                                                        {t('common.cancel') || 'Cancel Series'}
+                                                    </button>
+                                                </>
+                                            )}
+                                        </div>
                                     )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                {/* RIGHT COLUMN: Monthly View */}
+                <div className="right-col">
+                    <div className="monthly-card">
+                        <div className="month-header">
+                            <button className="icon-btn" onClick={goToPreviousMonth}><ChevronLeft size={20} /></button>
+                            <div className="month-title-group">
+                                <h3>{formatMonthYear(selectedDate)}</h3>
+                                <span className={`month-total ${monthlyTotal > 0 ? 'income' : ''}`}>
+                                    {isTotalNegative ? '-' : '+'}{formatAmount(Math.abs(monthlyTotal))}
+                                </span>
+                            </div>
+                            <button className="icon-btn" onClick={goToNextMonth}><ChevronRight size={20} /></button>
+                        </div>
+
+                        <div className="monthly-list">
+                            {monthlyItems.length > 0 ? (
+                                monthlyItems.map(item => (
+                                    <div key={item.id} className={`monthly-item ${item.status}`}>
+                                        <div className="m-date">
+                                            <span className="d-day">{new Date(item.date).getDate()}</span>
+                                            <span className="d-dow">{new Date(item.date).toLocaleDateString(undefined, { weekday: 'short' })}</span>
+                                        </div>
+                                        <div className="m-icon" style={{ backgroundColor: getCategoryColor(item.category) }}>
+                                            {React.createElement(getCategoryIcon(item.category), { size: 16, color: 'white' })}
+                                        </div>
+                                        <div className="m-info">
+                                            <div className="m-desc">{item.description}</div>
+                                            <div className="m-cat">
+                                                {tCategory(item.category)}
+                                                {(item.recurring === 1 || item.recurringSeriesId) && (
+                                                    <span className="badge-recurring">
+                                                        <RefreshCw size={10} />
+                                                        {item.recurringTransactionCount && item.totalRecurringTransactions
+                                                            ? `${item.recurringTransactionCount}/${item.totalRecurringTransactions}`
+                                                            : ''}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className={`m-amount ${item.type} ${item.status}`}>
+                                            {item.type === 'income' ? '+' : '-'}{formatAmount(item.amount)}
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="empty-month">
+                                    <Calendar size={32} />
+                                    <p>No recurring payments for this month</p>
                                 </div>
                             )}
                         </div>
-                    ))}
+                    </div>
                 </div>
-            )}
+            </div>
 
             <style>{`
                 .recurring-container {
                     max-width: 100%;
                     margin: 0 auto;
                     padding-bottom: 2rem;
+                }
+
+                .recurring-page-layout {
+                    display: grid;
+                    grid-template-columns: 2fr 1fr;
+                    gap: 1.5rem;
+                    align-items: start;
+                }
+                
+                @media (max-width: 1024px) {
+                    .recurring-page-layout {
+                        grid-template-columns: 1fr;
+                    }
+                }
+
+                .left-col {
+                    display: flex;
+                    flex-direction: column;
+                }
+                
+                .right-col {
+                    display: flex;
+                    flex-direction: column;
+                }
+
+                .monthly-card {
+                    background-color: var(--bg-card);
+                    border: 1px solid var(--color-divider);
+                    border-radius: 1rem;
+                    padding: 1.5rem;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 1rem;
+                }
+
+                .month-header {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    margin-bottom: 0.5rem;
+                }
+                
+                .month-header h3 {
+                   font-size: 1.1rem;
+                   font-weight: 600; 
+                   margin: 0;
+                }
+
+                .month-title-group {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 2px;
+                }
+                
+                .month-total {
+                    font-size: 0.9rem;
+                    color: var(--text-muted);
+                    font-weight: 500;
+                }
+                
+                .month-total.income {
+                    color: var(--color-success);
+                }
+
+                .badge-recurring {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 3px;
+                    background-color: var(--bg-app);
+                    padding: 2px 6px;
+                    border-radius: 4px;
+                    font-size: 0.7rem;
+                    color: var(--text-muted);
+                    margin-left: 6px;
+                    border: 1px solid var(--color-divider);
+                }
+
+                .icon-btn {
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                    color: var(--text-muted);
+                    padding: 8px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: background 0.2s;
+                }
+                
+                .icon-btn:hover {
+                    background-color: rgba(0,0,0,0.05);
+                    color: var(--text-main);
+                }
+
+                .monthly-list {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0;
+                }
+                
+                .monthly-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 12px 0;
+                    border-bottom: 1px solid var(--color-divider);
+                }
+                
+                .monthly-item:last-child { border-bottom: none; }
+
+                .m-date {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    min-width: 40px;
+                    text-align: center;
+                    border: 1px solid var(--color-divider);
+                    border-radius: 8px;
+                    padding: 4px;
+                    background-color: rgba(0,0,0,0.02);
+                }
+                
+                .d-day { font-weight: 700; font-size: 1.1rem; line-height: 1; }
+                .d-dow { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; }
+
+                .m-icon {
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    flex-shrink: 0;
+                }
+                
+                .m-info { flex: 1; overflow: hidden; }
+                .m-desc { font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+                .m-cat { font-size: 0.75rem; color: var(--text-muted); }
+
+                .m-amount { font-weight: 600; font-size: 0.95rem; }
+                .m-amount.income { color: var(--color-success); }
+                .m-amount.upcoming { opacity: 0.7; font-style: italic; } /* Distinguish upcoming */
+                
+                .monthly-item.upcoming .m-desc { color: var(--text-muted); }
+
+                .empty-month {
+                    padding: 2rem;
+                    text-align: center;
+                    color: var(--text-muted);
+                    opacity: 0.7;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 8px;
+                }
+
+                /* Layout overrides for Left Col grid */
+                .series-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                    gap: 1.5rem;
                 }
 
                 .empty-state {
@@ -193,12 +475,6 @@ const RecurringTransactions = () => {
                     opacity: 0.5;
                 }
 
-                .series-grid {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-                    gap: 1.5rem;
-                }
-
                 .series-card {
                     background-color: var(--bg-card);
                     border: 1px solid var(--color-divider);
@@ -206,7 +482,7 @@ const RecurringTransactions = () => {
                     padding: 1.5rem;
                     display: flex;
                     flex-direction: column;
-                    gap: 1.25rem; /* Reduced gap since we added actions */
+                    gap: 1.25rem; 
                     transition: transform 0.2s, box-shadow 0.2s;
                 }
 
@@ -375,7 +651,7 @@ const RecurringTransactions = () => {
                 }
 
                 .edit-amount-input {
-                    width: 100px; /* Fixed width instead of flex: 1 */
+                    width: 100px;
                     padding: 6px;
                     border-radius: 6px;
                     border: 1px solid var(--color-brand);
@@ -463,7 +739,7 @@ const RecurringTransactions = () => {
                     color: var(--text-muted);
                 }
                 .modal-btn.primary {
-                    background-color: var(--color-cancel); /* Using cancel color for destructive action */
+                    background-color: var(--color-cancel); 
                     color: white;
                 }
             `}</style>

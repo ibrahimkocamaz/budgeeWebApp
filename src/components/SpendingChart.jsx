@@ -8,7 +8,7 @@ import { useCategories } from '../context/CategoriesContext';
 
 const SpendingChart = () => {
     const { formatAmount } = useCurrency();
-    const { t } = useLanguage();
+    const { t, tCategory } = useLanguage();
     const { categories } = useCategories();
     const { transactions } = useTransactions();
 
@@ -35,7 +35,7 @@ const SpendingChart = () => {
             .map(([name, value]) => {
                 const categoryObj = catLookup[name.toLowerCase()];
                 return {
-                    name: t(`categoryNames.${name}`) || (name.charAt(0).toUpperCase() + name.slice(1)),
+                    name: tCategory(name),
                     value,
                     color: categoryObj ? categoryObj.color : getCategoryColor(name),
                     icon: categoryObj ? getCategoryIcon(categoryObj.iconKey) : getCategoryIcon(name)

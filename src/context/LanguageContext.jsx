@@ -14,8 +14,9 @@ export const LanguageProvider = ({ children }) => {
     }, [language]);
 
     // Translation helper function
-    // Usage: t('sidebar.dashboard')
-    const t = (key) => {
+    // Translation helper function
+    // Usage: t('sidebar.dashboard', { count: 5 })
+    const t = (key, params = {}) => {
         const keys = key.split('.');
         let value = translations[language];
 
@@ -23,11 +24,33 @@ export const LanguageProvider = ({ children }) => {
             value = value?.[k];
         }
 
-        return value || key; // Fallback to key if not found
+        if (!value) return key;
+
+        // Handle interpolation: {{param}}
+        if (params && typeof value === 'string') {
+            Object.keys(params).forEach(paramKey => {
+                value = value.replace(new RegExp(`{{${paramKey}}}`, 'g'), params[paramKey]);
+            });
+        }
+
+        return value;
+    };
+
+    // Helper for category names specifically
+    // Checks if translation exists for 'categoryNames.key', if not returns original name
+    const tCategory = (name) => {
+        if (!name) return '';
+        const lowerName = name.toLowerCase();
+        const key = `categoryNames.${lowerName}`;
+        const translated = t(key);
+        // If translation returns the key itself, it means missing translation -> use original name
+        const finalName = translated === key ? name : translated;
+        // Capitalize first letter
+        return finalName.charAt(0).toUpperCase() + finalName.slice(1);
     };
 
     return (
-        <LanguageContext.Provider value={{ language, setLanguage, t }}>
+        <LanguageContext.Provider value={{ language, setLanguage, t, tCategory }}>
             {children}
         </LanguageContext.Provider>
     );

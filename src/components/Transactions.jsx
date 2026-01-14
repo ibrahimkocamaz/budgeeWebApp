@@ -11,7 +11,7 @@ import ConfirmationModal from './ConfirmationModal';
 
 const Transactions = ({ limit, showControls = true }) => {
 
-    const { t, language } = useLanguage();
+    const { t, tCategory, language } = useLanguage();
     const { formatAmount } = useCurrency();
     const { settings } = useSettings();
     const { transactions: allTransactions, deleteTransaction, updateTransaction } = useTransactions();
@@ -174,6 +174,9 @@ const Transactions = ({ limit, showControls = true }) => {
 
     // Group by Date
     const groupedTransactions = useMemo(() => {
+        if (!showControls) {
+            return { 'all': filteredTransactions };
+        }
         const groups = {};
         filteredTransactions.forEach(tx => {
             const date = new Date(tx.date).toLocaleDateString();
@@ -181,7 +184,7 @@ const Transactions = ({ limit, showControls = true }) => {
             groups[date].push(tx);
         });
         return groups;
-    }, [filteredTransactions]);
+    }, [filteredTransactions, showControls]);
 
     // Create a map for fast category lookup
     const categoryMap = useMemo(() => {
@@ -360,7 +363,7 @@ const Transactions = ({ limit, showControls = true }) => {
                                             className={`tab ${categoryFilter === cat ? 'active' : ''}`}
                                             onClick={() => setCategoryFilter(categoryFilter === cat ? null : cat)}
                                         >
-                                            {t(`categoryNames.${cat.toLowerCase()}`) || cat}
+                                            {tCategory(cat)}
                                         </button>
                                     ))}
                                 </>
@@ -373,7 +376,7 @@ const Transactions = ({ limit, showControls = true }) => {
             <div className="transactions-list">
                 {Object.entries(groupedTransactions).map(([date, transactions]) => (
                     <div key={date} className="date-group">
-                        <h3 className="date-header">{getRelativeDateLabel(transactions[0].date)}</h3>
+                        {showControls && <h3 className="date-header">{getRelativeDateLabel(transactions[0].date)}</h3>}
                         <div className="group-items">
                             {transactions.map(tx => {
                                 const categoryObj = categoryMap[tx.category.toLowerCase()];
@@ -387,52 +390,56 @@ const Transactions = ({ limit, showControls = true }) => {
 
                                     return (
                                         <div key={tx.id} className="transaction-item editing">
-                                            <div className="edit-form-row">
-                                                <input
-                                                    type="date"
-                                                    className="edit-input date"
-                                                    value={editForm.date}
-                                                    onChange={(e) => setEditForm({ ...editForm, date: e.target.value })}
-                                                />
-                                                <select
-                                                    className="edit-input type"
-                                                    value={editForm.type}
-                                                    onChange={(e) => setEditForm({ ...editForm, type: e.target.value, category: '' })}
-                                                >
-                                                    <option value="income">{t('dashboard.income')}</option>
-                                                    <option value="expense">{t('dashboard.expenses')}</option>
-                                                </select>
-                                                <select
-                                                    className="edit-input category"
-                                                    value={editForm.category}
-                                                    onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
-                                                >
-                                                    <option value="">{t('common.selectCategory') || 'Select Category'}</option>
-                                                    {editModeCategories.map(cat => (
-                                                        <option key={cat.id} value={cat.name.toLowerCase()}>{t(`categoryNames.${cat.name.toLowerCase()}`) || cat.name}</option>
-                                                    ))}
-                                                </select>
-                                                <input
-                                                    type="text"
-                                                    className="edit-input description"
-                                                    placeholder="Description"
-                                                    value={editForm.description}
-                                                    onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                                                />
-                                                <input
-                                                    type="number"
-                                                    className="edit-input amount"
-                                                    placeholder="Amount"
-                                                    value={editForm.amount}
-                                                    onChange={(e) => setEditForm({ ...editForm, amount: e.target.value })}
-                                                />
-                                                <div className="tx-actions">
-                                                    <button className="action-btn save" onClick={() => handleSaveEdit(tx)}>
-                                                        <Check size={16} />
-                                                    </button>
-                                                    <button className="action-btn cancel" onClick={handleCancelEdit}>
-                                                        <X size={16} />
-                                                    </button>
+                                            <div className="edit-form-container">
+                                                <div className="edit-row-top">
+                                                    <input
+                                                        type="date"
+                                                        className="edit-input date"
+                                                        value={editForm.date}
+                                                        onChange={(e) => setEditForm({ ...editForm, date: e.target.value })}
+                                                    />
+                                                    <select
+                                                        className="edit-input type"
+                                                        value={editForm.type}
+                                                        onChange={(e) => setEditForm({ ...editForm, type: e.target.value, category: '' })}
+                                                    >
+                                                        <option value="income">{t('dashboard.income')}</option>
+                                                        <option value="expense">{t('dashboard.expenses')}</option>
+                                                    </select>
+                                                    <select
+                                                        className="edit-input category"
+                                                        value={editForm.category}
+                                                        onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                                                    >
+                                                        <option value="">{t('common.selectCategory') || 'Select Category'}</option>
+                                                        {editModeCategories.map(cat => (
+                                                            <option key={cat.id} value={cat.name.toLowerCase()}>{tCategory(cat.name)}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                                <div className="edit-row-bottom">
+                                                    <input
+                                                        type="text"
+                                                        className="edit-input description"
+                                                        placeholder="Description"
+                                                        value={editForm.description}
+                                                        onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                                                    />
+                                                    <input
+                                                        type="number"
+                                                        className="edit-input amount"
+                                                        placeholder="Amount"
+                                                        value={editForm.amount}
+                                                        onChange={(e) => setEditForm({ ...editForm, amount: e.target.value })}
+                                                    />
+                                                    <div className="tx-actions">
+                                                        <button className="action-btn save" onClick={() => handleSaveEdit(tx)}>
+                                                            <Check size={16} />
+                                                        </button>
+                                                        <button className="action-btn cancel" onClick={handleCancelEdit}>
+                                                            <X size={16} />
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -444,21 +451,21 @@ const Transactions = ({ limit, showControls = true }) => {
                                         <div
                                             className="icon-wrapper"
                                             style={{
-                                                backgroundColor: `${color}20`,
-                                                color: color
+                                                backgroundColor: color,
+                                                color: 'white'
                                             }}
                                         >
-                                            <Icon size={20} />
+                                            <Icon size={24} color="white" />
                                         </div>
 
                                         <div className="details">
                                             <div className="top-row">
                                                 <span className="tx-description">
-                                                    {tx.description || t(`categoryNames.${tx.category.toLowerCase()}`) || tx.category}
+                                                    {tCategory(tx.category)}
                                                 </span>
                                             </div>
                                             <div className="bottom-row">
-                                                <span className="tx-category">{t(`categoryNames.${tx.category.toLowerCase()}`) || tx.category}</span>
+                                                <span className="tx-category">{tx.description}</span>
                                                 {isRecurring && (
                                                     <span className="badge-recurring">
                                                         <RefreshCw size={12} />
@@ -470,24 +477,33 @@ const Transactions = ({ limit, showControls = true }) => {
                                             </div>
                                         </div>
 
-                                        <span className={`amount ${tx.type === 'income' ? 'positive' : 'negative'}`}>
-                                            {tx.type === 'income' ? '+' : '-'}{formatAmount(tx.amount)}
-                                        </span>
-
-                                        <div className="tx-actions">
-                                            <button
-                                                className="action-btn"
-                                                onClick={() => handleEditClick(tx)}
-                                            >
-                                                <Edit2 size={16} />
-                                            </button>
-                                            <button
-                                                className="action-btn delete"
-                                                onClick={() => handleDeleteClick(tx.id)}
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
+                                        <div className="amount-container" style={{ marginLeft: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                            <span className={`amount ${tx.type === 'income' ? 'positive' : 'negative'}`}>
+                                                {tx.type === 'income' ? '+' : '-'}{formatAmount(tx.amount)}
+                                            </span>
+                                            {!showControls && (
+                                                <span className="tx-date-sub" style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                                                    {new Date(tx.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                                </span>
+                                            )}
                                         </div>
+
+                                        {showControls && (
+                                            <div className="tx-actions">
+                                                <button
+                                                    className="action-btn"
+                                                    onClick={() => handleEditClick(tx)}
+                                                >
+                                                    <Edit2 size={16} />
+                                                </button>
+                                                <button
+                                                    className="action-btn delete"
+                                                    onClick={() => handleDeleteClick(tx.id)}
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 );
                             })}
@@ -845,8 +861,8 @@ const Transactions = ({ limit, showControls = true }) => {
                 }
 
                 .icon-wrapper {
-                    width: 42px;
-                    height: 42px;
+                    width: 48px;
+                    height: 48px;
                     border-radius: 50%;
                     display: flex;
                     align-items: center;
@@ -898,7 +914,6 @@ const Transactions = ({ limit, showControls = true }) => {
                 .amount {
                     font-weight: 600;
                     font-size: 1rem;
-                    margin-left: auto; /* Push to right */
                     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                 }
 
@@ -922,11 +937,11 @@ const Transactions = ({ limit, showControls = true }) => {
                     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                 }
 
-                .transaction-item:not(.editing):hover .amount {
+                .full-page .transaction-item:not(.editing):hover .amount {
                     transform: translateX(-70px);
                 }
 
-                .transaction-item:not(.editing):hover .tx-actions {
+                .full-page .transaction-item:not(.editing):hover .tx-actions {
                     opacity: 1;
                     transform: translateY(-50%) translateX(0);
                     pointer-events: auto;
@@ -970,9 +985,17 @@ const Transactions = ({ limit, showControls = true }) => {
                     transition: none;
                 }
 
-                .edit-form-row {
+                .edit-form-container {
                     display: flex;
-                    gap: 12px;
+                    flex-direction: column;
+                    gap: 8px;
+                    width: 100%;
+                }
+
+                .edit-row-top,
+                .edit-row-bottom {
+                    display: flex;
+                    gap: 8px;
                     align-items: center;
                     width: 100%;
                 }
@@ -997,7 +1020,7 @@ const Transactions = ({ limit, showControls = true }) => {
                     color: var(--text-main);
                 }
 
-                .edit-input.date { width: 130px; }
+                .edit-input.date { width: auto; flex: 1; min-width: 100px; }
                 
                 /* Fix date picker icon visibility in light mode */
                 [data-theme='light'] .edit-input::-webkit-calendar-picker-indicator {
@@ -1005,10 +1028,21 @@ const Transactions = ({ limit, showControls = true }) => {
                     cursor: pointer;
                 }
                 
-                .edit-input.type { width: 100px; }
-                .edit-input.category { width: 140px; }
-                .edit-input.description { flex: 1; }
-                .edit-input.amount { width: 100px; text-align: right; }
+                .edit-input.type { width: auto; flex: 1; min-width: 80px; }
+                .edit-input.category { width: auto; flex: 1; min-width: 110px; }
+                .edit-input.description { flex: 2; min-width: 120px; }
+                .edit-input.amount { width: 80px; text-align: right; }
+
+                /* Adjust actions in strict mode */
+                .transaction-item.editing .tx-actions {
+                    position: static;
+                    opacity: 1;
+                    pointer-events: auto;
+                    transform: none;
+                    transition: none;
+                    display: flex;
+                    gap: 4px;
+                }
 
                 .action-btn.save {
                     color: var(--color-success, #2ecc71);

@@ -22,7 +22,8 @@ export const translations = {
             spendingByCategory: "Spending by Category",
             upcomingRecurring: "Upcoming Payments",
             noUpcomingRecurring: "No upcoming payments for 30 days",
-            viewAllRecurring: "View Recurring"
+            viewAllRecurring: "View Recurring",
+            andMore: "+ {{count}} more"
         },
         settings: {
             title: "Settings",
@@ -196,7 +197,8 @@ export const translations = {
             spendingByCategory: "Gastos por Categoría",
             upcomingRecurring: "Próximos Pagos",
             noUpcomingRecurring: "Sin pagos en 30 días",
-            viewAllRecurring: "Ver Recurrentes"
+            viewAllRecurring: "Ver Recurrentes",
+            andMore: "+ {{count}} más"
         },
         settings: {
             title: "Ajustes",
@@ -358,7 +360,8 @@ export const translations = {
             spendingByCategory: "Despesas por Categoria",
             upcomingRecurring: "Próximos Pagamentos",
             noUpcomingRecurring: "Sem pagamentos em 30 dias",
-            viewAllRecurring: "Ver Recorrentes"
+            viewAllRecurring: "Ver Recorrentes",
+            andMore: "+ {{count}} mais"
         },
         settings: {
             title: "Configurações",
@@ -517,7 +520,8 @@ export const translations = {
             spendingByCategory: "Kategori Bazlı Harcama",
             upcomingRecurring: "Yaklaşan Ödemeler",
             noUpcomingRecurring: "30 gün içinde ödeme yok",
-            viewAllRecurring: "Tümünü Gör"
+            viewAllRecurring: "Tümünü Gör",
+            andMore: "+ {{count}} daha"
         },
         settings: {
             title: "Ayarlar",

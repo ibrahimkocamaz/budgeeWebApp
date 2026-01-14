@@ -8,7 +8,7 @@ import { useTransactions } from '../context/TransactionsContext';
 
 const AddTransaction = () => {
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, tCategory } = useLanguage();
   const { getCategoriesByType } = useCategories();
   const { addTransaction } = useTransactions();
 
@@ -296,7 +296,7 @@ const AddTransaction = () => {
                     <option value="" disabled>{t('addTransaction.selectCategory')}</option>
                     {(tx.type === 'expense' ? expenseCategories : incomeCategories).map(cat => (
                       <option key={cat.id} value={cat.name.toLowerCase()}>
-                        {t(`categoryNames.${cat.name.toLowerCase()}`) || cat.name}
+                        {tCategory(cat.name)}
                       </option>
                     ))}
                   </select>
@@ -309,7 +309,6 @@ const AddTransaction = () => {
                     placeholder={t('addTransaction.titlePlaceholder')}
                     value={tx.title}
                     onChange={(e) => handleChange(tx.id, 'title', e.target.value)}
-                    required
                   />
                 </div>
 

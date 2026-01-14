@@ -6,7 +6,7 @@ import { useLanguage } from '../context/LanguageContext';
 import CategoryForm from './CategoryForm';
 
 const ManageCategories = () => {
-    const { t } = useLanguage();
+    const { t, tCategory } = useLanguage();
     const { categories, addCategory, updateCategory, deleteCategory } = useCategories();
     const [showForm, setShowForm] = useState(false);
     const [editingCategory, setEditingCategory] = useState(null);
@@ -64,7 +64,9 @@ const ManageCategories = () => {
                                 <IconComponent size={24} color="white" />
                             </div>
                             <div className="cat-info">
-                                <span className="cat-name">{t(`categoryNames.${cat.name.toLowerCase()}`) || cat.name}</span>
+                                <span className="cat-name">
+                                    {tCategory(cat.name)}
+                                </span>
                             </div>
                             <div className="cat-actions">
                                 <button className="action-btn edit" onClick={() => handleEdit(cat)}>
@@ -86,12 +88,7 @@ const ManageCategories = () => {
 
     return (
         <div className="manage-categories-container">
-            <div className="page-header">
-                <div>
-                    <h2 className="title">{t('sidebar.categories')}</h2>
-                    <p className="subtitle">{t('categories.subtitle')}</p>
-                </div>
-            </div>
+
 
             <div className="header-tabs mobile-only">
                 <button

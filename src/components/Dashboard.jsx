@@ -14,21 +14,27 @@ import { getCategoryIcon, getCategoryColor as getDefaultCategoryColor } from '..
 
 const Dashboard = () => {
   const { categories } = useCategories();
-  const { t } = useLanguage();
+  const { t, tCategory } = useLanguage();
   const { formatAmount } = useCurrency();
   const { transactions } = useTransactions();
   const recurringSeries = useRecurringSeries();
 
-  const upcomingRecurring = useMemo(() => {
-    const now = new Date();
-    const thirtyDaysFromNow = new Date();
-    thirtyDaysFromNow.setDate(now.getDate() + 60);
+  const { upcomingItems, upcomingTotal, totalCount } = useMemo(() => {
+    const today = new Date();
+    const sixtyDaysFromNow = new Date(today);
+    sixtyDaysFromNow.setDate(today.getDate() + 60);
 
-    return recurringSeries.filter(series => {
-      if (!series.nextDueDate || series.isCompleted) return false;
+    const all = recurringSeries.filter(series => {
+      if (!series.nextDueDate) return false;
       const dueDate = new Date(series.nextDueDate);
-      return dueDate >= now && dueDate <= thirtyDaysFromNow;
-    }).slice(0, 4); // Limit to top 4
+      return series.active !== false && // Check explicit false if active exists, else assume true (removed strict check earlier, just rely on existing props)
+        series.type === 'expense' &&
+        dueDate >= today &&
+        dueDate <= sixtyDaysFromNow;
+    }).sort((a, b) => new Date(a.nextDueDate) - new Date(b.nextDueDate));
+
+    const total = all.reduce((sum, item) => sum + Number(item.amount), 0);
+    return { upcomingItems: all.slice(0, 5), upcomingTotal: total, totalCount: all.length };
   }, [recurringSeries]);
 
   const getCategoryColor = (name) => {
@@ -44,16 +50,19 @@ const Dashboard = () => {
     return transactions.reduce((acc, tx) => {
       const txDate = new Date(tx.date);
       const isCurrentMonth = txDate.getMonth() === currentMonth && txDate.getFullYear() === currentYear;
+      const isPastOrToday = txDate <= now;
       const amount = Number(tx.amount);
 
-      // Total Balance (All time)
-      if (tx.type === 'income') {
-        acc.totalBalance += amount;
-      } else {
-        acc.totalBalance -= amount;
+      // Total Balance (Current Realized Balance)
+      if (isPastOrToday) {
+        if (tx.type === 'income') {
+          acc.totalBalance += amount;
+        } else {
+          acc.totalBalance -= amount;
+        }
       }
 
-      // Monthly Stats
+      // Monthly Stats (Projected for the whole month)
       if (isCurrentMonth) {
         if (tx.type === 'income') {
           acc.income += amount;
@@ -125,28 +134,41 @@ const Dashboard = () => {
             {/* Upcoming Recurring Widget */}
             <div className="recurring-widget">
               <div className="widget-header">
-                <h2>{t('dashboard.upcomingRecurring')}</h2>
+                <div className="header-title-group">
+                  <h2>{t('dashboard.upcomingRecurring')}</h2>
+                  <span className="header-total">({formatAmount(upcomingTotal)})</span>
+                </div>
                 <Link to="/recurring" className="btn-link">{t('dashboard.viewAllRecurring') || 'View All'}</Link>
               </div>
 
-              {upcomingRecurring.length > 0 ? (
+              {upcomingItems.length > 0 ? (
                 <div className="upcoming-list">
-                  {upcomingRecurring.map(series => (
+                  {upcomingItems.map(series => (
                     <div key={series.id} className="upcoming-item">
                       <div className="upcoming-icon" style={{ backgroundColor: getCategoryColor(series.category) }}>
-                        {React.createElement(getCategoryIcon(series.category) || DollarSign, { size: 20 })}
+                        {React.createElement(getCategoryIcon(series.category) || DollarSign, { size: 24, color: "white" })}
                       </div>
                       <div className="upcoming-info">
-                        <div className="upcoming-name">{series.description}</div>
-                        <div className={`upcoming-date ${new Date(series.nextDueDate) - new Date() < 3 * 24 * 60 * 60 * 1000 ? 'urgent' : ''}`}>
+                        <div className="upcoming-main">{tCategory(series.category)}</div>
+                        <div className="upcoming-sub">{series.description}</div>
+                      </div>
+                      <div className="upcoming-amount-wrapper">
+                        <div className={`upcoming-amount ${series.type}`}>
+                          {series.type === 'income' ? '+' : ''}{formatAmount(series.amount)}
+                        </div>
+                        <div className={`upcoming-date-sub ${new Date(series.nextDueDate) - new Date() < 3 * 24 * 60 * 60 * 1000 ? 'urgent' : ''}`}>
                           {new Date(series.nextDueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                         </div>
                       </div>
-                      <div className={`upcoming-amount ${series.type}`}>
-                        {series.type === 'income' ? '+' : ''}{formatAmount(series.amount)}
-                      </div>
                     </div>
                   ))}
+                  {totalCount > upcomingItems.length && (
+                    <div className="upcoming-more">
+                      <Link to="/recurring" className="more-link">
+                        {t('dashboard.andMore', { count: totalCount - upcomingItems.length }) || `+ ${totalCount - upcomingItems.length} more`}
+                      </Link>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="empty-recurring">
@@ -184,7 +206,7 @@ const Dashboard = () => {
         .dashboard-content {
           display: grid;
           grid-template-columns: 2fr 1fr;
-          gap: 2rem;
+          gap: 1.5rem;
           align-items: start;
         }
 
@@ -199,7 +221,7 @@ const Dashboard = () => {
         .summary-cards-row {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
-          gap: 1.5rem;
+          gap: 1rem;
         }
 
         @media (max-width: 1200px) {
@@ -222,7 +244,7 @@ const Dashboard = () => {
         .transactions-split-section {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 1.5rem;
+          gap: 1rem;
         }
 
         @media (max-width: 768px) {
@@ -292,8 +314,8 @@ const Dashboard = () => {
         }
 
         .upcoming-icon {
-            width: 40px;
-            height: 40px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -307,7 +329,7 @@ const Dashboard = () => {
             overflow: hidden;
         }
 
-        .upcoming-name {
+        .upcoming-main {
             font-weight: 600;
             font-size: 0.95rem;
             white-space: nowrap;
@@ -315,12 +337,28 @@ const Dashboard = () => {
             text-overflow: ellipsis;
         }
 
-        .upcoming-date {
-            font-size: 0.8rem;
+        .upcoming-sub {
+            font-size: 0.85rem;
             color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .upcoming-amount-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            margin-left: 1rem;
+        }
+
+        .upcoming-date-sub {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
         }
         
-        .upcoming-date.urgent {
+        .upcoming-date-sub.urgent {
             color: var(--color-cancel);
             font-weight: 600;
         }
@@ -375,6 +413,18 @@ const Dashboard = () => {
           box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
 
+        .header-title-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-total {
+            font-size: 1rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
         .card-header {
           display: flex;
           justify-content: space-between;
@@ -387,7 +437,7 @@ const Dashboard = () => {
           font-weight: 500;
         }
 
-        .icon-wrapper {
+        .summary-cards-row .icon-wrapper {
           width: 36px;
           height: 36px;
           border-radius: 50%;
@@ -416,11 +466,22 @@ const Dashboard = () => {
         .success-text { color: var(--text-income); }
         .error-text { color: var(--text-expense); }
 
-        .card-footer {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          font-size: 0.875rem;
+        .upcoming-more {
+            padding: 12px;
+            text-align: center;
+            border-top: 1px solid var(--color-divider);
+            background-color: rgba(0,0,0,0.02);
+        }
+
+        .more-link {
+            font-size: 0.85rem;
+            color: var(--color-brand);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .more-link:hover {
+            text-decoration: underline;
         }
 
         .badge.positive {

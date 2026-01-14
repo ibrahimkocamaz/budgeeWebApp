@@ -10,7 +10,7 @@ import { getCategoryIcon, getCategoryColor } from '../data/categoryOptions';
 import ConfirmationModal from './ConfirmationModal';
 
 const Budgets = ({ limit, simpleMode = false }) => {
-    const { t } = useLanguage();
+    const { t, tCategory } = useLanguage();
     const { formatAmount } = useCurrency();
     const { getCategoriesByType, categories } = useCategories();
     const { budgets, deleteBudget, addBudget, updateBudget, } = useBudgets();
@@ -130,11 +130,7 @@ const Budgets = ({ limit, simpleMode = false }) => {
     return (
         <div className={`budgets-container ${simpleMode ? 'widget-mode' : ''}`}>
             {!simpleMode && (
-                <div className="page-header">
-                    <div>
-                        <h2 className="title">{t('sidebar.budgets')}</h2>
-                        <p className="subtitle">{budgets.length} {t('sidebar.budgets').toLowerCase()} {t('budgets.active')}</p>
-                    </div>
+                <div className="page-header" style={{ justifyContent: 'flex-end' }}>
                     <button
                         className="btn-primary"
                         onClick={handleCreateClick}
@@ -172,10 +168,10 @@ const Budgets = ({ limit, simpleMode = false }) => {
                                 <div className="card-top">
                                     <div className="budget-header">
                                         <div className="icon-wrapper" style={{ backgroundColor: color }}>
-                                            <Icon size={24} color="#FFF" />
+                                            <Icon size={simpleMode ? 16 : 24} color="#FFF" />
                                         </div>
                                         <div className="budget-info">
-                                            <h3>{t(`categoryNames.${budget.category.toLowerCase()}`) || budget.category}</h3>
+                                            <h3>{tCategory(budget.category)}</h3>
                                             <span className="period-badge">{t(`budgets.periods.${budget.period}`) || budget.period}</span>
                                         </div>
                                     </div>
@@ -287,7 +283,7 @@ const Budgets = ({ limit, simpleMode = false }) => {
                                     <option value="">{t('budgets.selectCategory')}</option>
                                     {expenseCategories.map(cat => (
                                         <option key={cat.id} value={cat.name.toLowerCase()}>
-                                            {t(`categoryNames.${cat.name.toLowerCase()}`) || cat.name}
+                                            {tCategory(cat.name)}
                                         </option>
                                     ))}
                                 </select>
@@ -475,6 +471,7 @@ const Budgets = ({ limit, simpleMode = false }) => {
                     display: flex;
                     align-items: center;
                     justify-content: center;
+                    flex-shrink: 0;
                 }
 
                 .budget-info h3 {
