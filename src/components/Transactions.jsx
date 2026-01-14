@@ -222,12 +222,58 @@ const Transactions = ({ limit, showControls = true }) => {
         return date.toLocaleDateString(language, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     };
 
-    // Calculate Monthly Totals
-    const monthlyTotals = useMemo(() => {
-        const currentMonthRefStr = selectedDate.toISOString().slice(0, 7); // YYYY-MM
-
+    // Calculate Totals based on Account and Time filters
+    const totals = useMemo(() => {
         return allTransactions.reduce((acc, tx) => {
-            if (tx.date.startsWith(currentMonthRefStr)) {
+            // 1. Account Filter
+            if (accountFilter !== 'all' && tx.accountId !== accountFilter) {
+                return acc;
+            }
+
+            // 1.5 Category Filter
+            if (categoryFilter && tx.category !== categoryFilter) {
+                return acc;
+            }
+
+            // 2. Time Filter
+            const txDate = new Date(tx.date);
+            const now = new Date();
+            let matchesTime = true;
+
+            if (timeFilter === 'today') {
+                matchesTime = txDate.toDateString() === now.toDateString();
+            } else if (timeFilter === 'week') {
+                const startDayMap = { 'sunday': 0, 'monday': 1, 'saturday': 6 };
+                const startDay = startDayMap[settings.startOfWeek] || 0;
+
+                const startOfWeek = new Date(now);
+                const currentDay = now.getDay();
+                const diff = (currentDay - startDay + 7) % 7;
+
+                startOfWeek.setDate(now.getDate() - diff);
+                startOfWeek.setHours(0, 0, 0, 0);
+
+                const endOfWeek = new Date(startOfWeek);
+                endOfWeek.setDate(startOfWeek.getDate() + 6);
+                endOfWeek.setHours(23, 59, 59, 999);
+
+                matchesTime = txDate >= startOfWeek && txDate <= endOfWeek;
+            } else if (timeFilter === 'month') {
+                matchesTime = txDate.getMonth() === selectedDate.getMonth() &&
+                    txDate.getFullYear() === selectedDate.getFullYear();
+            } else if (timeFilter === 'custom') {
+                if (customDateRange.start && customDateRange.end) {
+                    const startDate = new Date(customDateRange.start);
+                    startDate.setHours(0, 0, 0, 0);
+                    const endDate = new Date(customDateRange.end);
+                    endDate.setHours(23, 59, 59, 999);
+                    matchesTime = txDate >= startDate && txDate <= endDate;
+                } else {
+                    matchesTime = true;
+                }
+            }
+
+            if (matchesTime) {
                 const amount = parseFloat(tx.amount) || 0;
                 if (tx.type === 'income') {
                     acc.income += amount;
@@ -237,9 +283,9 @@ const Transactions = ({ limit, showControls = true }) => {
             }
             return acc;
         }, { income: 0, expense: 0 });
-    }, [allTransactions, selectedDate]);
+    }, [allTransactions, accountFilter, timeFilter, categoryFilter, selectedDate, customDateRange, settings]);
 
-    const monthlyBalance = monthlyTotals.income - monthlyTotals.expense;
+    const currentBalance = totals.income - totals.expense;
 
     return (
         <div className={`transactions-wrapper ${showControls ? 'full-page' : 'widget-mode'}`}>
@@ -252,16 +298,16 @@ const Transactions = ({ limit, showControls = true }) => {
                         <div className="summary-cards">
                             <div className="summary-card income">
                                 <div className="card-label">{t('dashboard.income')}</div>
-                                <div className="card-value">+{formatAmount(monthlyTotals.income)}</div>
+                                <div className="card-value">+{formatAmount(totals.income)}</div>
                             </div>
                             <div className="summary-card expense">
                                 <div className="card-label">{t('dashboard.expenses')}</div>
-                                <div className="card-value">-{formatAmount(monthlyTotals.expense)}</div>
+                                <div className="card-value">-{formatAmount(totals.expense)}</div>
                             </div>
                             <div className="summary-card balance">
                                 <div className="card-label">{t('dashboard.balance')}</div>
-                                <div className={`card-value ${monthlyBalance >= 0 ? 'pos' : 'neg'}`}>
-                                    {monthlyBalance >= 0 ? '+' : ''}{formatAmount(monthlyBalance)}
+                                <div className={`card-value ${currentBalance >= 0 ? 'pos' : 'neg'}`}>
+                                    {currentBalance >= 0 ? '+' : ''}{formatAmount(currentBalance)}
                                 </div>
                             </div>
                         </div>
