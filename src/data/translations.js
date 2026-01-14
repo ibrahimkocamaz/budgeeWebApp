@@ -107,6 +107,7 @@ export const translations = {
         common: {
             vsLastMonth: "vs last month",
             items: "items",
+            allAccounts: "All Accounts",
             searchPlaceholder: "Search...",
             cancel: "Cancel",
             create: "Create",
@@ -118,7 +119,8 @@ export const translations = {
             save: "Save",
             selectCategory: "Select Category",
             deleteConfirmTitle: "Delete Transaction",
-            deleteConfirm: "Are you sure you want to delete this transaction? This action cannot be undone."
+            deleteConfirm: "Are you sure you want to delete this transaction? This action cannot be undone.",
+            account: "Account"
         },
         time: {
             today: "Today",
@@ -171,7 +173,24 @@ export const translations = {
             confirm: "Confirm"
         },
         transactions: {
-            emptyTitle: "No transactions found"
+            emptyTitle: "No transactions found",
+            details: "Transaction Details"
+        },
+        accounts: {
+            addNew: "Add New Account",
+            editTitle: "Edit Account",
+            createTitle: "Add New Account",
+            nameLabel: "Account Name",
+            typeLabel: "Account Type",
+            balanceLabel: "Current Balance",
+            createBtn: "Create Account",
+            saveBtn: "Save Changes",
+            types: {
+                bank: "Bank",
+                card: "Card",
+                savings: "Savings",
+                cash: "Cash"
+            }
         }
     },
     es: {
@@ -260,7 +279,8 @@ export const translations = {
             save: "Guardar Transacción",
             single: "Única",
             recurring: "Recurrente",
-            installment: "A Plazos"
+            installment: "A Plazos",
+            frequency: "Frecuencia"
         },
         currencies: {
             USD: "Dólar Estadounidense",
@@ -271,6 +291,7 @@ export const translations = {
         common: {
             vsLastMonth: "vs mes anterior",
             items: "elementos",
+            allAccounts: "Todas las Cuentas",
             searchPlaceholder: "Buscar...",
             cancel: "Cancelar",
             create: "Crear",
@@ -281,7 +302,8 @@ export const translations = {
             selectCategory: "Seleccionar Categoría",
             save: "Guardar",
             deleteConfirmTitle: "Eliminar Transacción",
-            deleteConfirm: "¿Estás seguro de que quieres eliminar esta transacción? Esta acción no se puede deshacer."
+            deleteConfirm: "¿Estás seguro de que quieres eliminar esta transacción? Esta acción no se puede deshacer.",
+            account: "Cuenta"
         },
         time: {
             today: "Hoy",
@@ -334,7 +356,24 @@ export const translations = {
             confirm: "Confirmar"
         },
         transactions: {
-            emptyTitle: "No se encontraron transacciones"
+            emptyTitle: "No se encontraron transacciones",
+            details: "Detalles de la Transacción"
+        },
+        accounts: {
+            addNew: "Añadir Nueva Cuenta",
+            editTitle: "Editar Cuenta",
+            createTitle: "Añadir Nueva Cuenta",
+            nameLabel: "Nombre de Cuenta",
+            typeLabel: "Tipo de Cuenta",
+            balanceLabel: "Balance Actual",
+            createBtn: "Crear Cuenta",
+            saveBtn: "Guardar Cambios",
+            types: {
+                bank: "Banco",
+                card: "Tarjeta",
+                savings: "Ahorros",
+                cash: "Efectivo"
+            }
         }
     },
     pt: {
@@ -423,7 +462,8 @@ export const translations = {
             save: "Salvar Transação",
             single: "Única",
             recurring: "Recorrente",
-            installment: "Parcelado"
+            installment: "Parcelado",
+            frequency: "Frequência"
         },
         currencies: {
             USD: "Dólar Americano",
@@ -434,6 +474,7 @@ export const translations = {
         common: {
             vsLastMonth: "vs mês anterior",
             items: "itens",
+            allAccounts: "Todas as Contas",
             searchPlaceholder: "Buscar...",
             cancel: "Cancelar",
             create: "Criar",
@@ -441,7 +482,8 @@ export const translations = {
             delete: "Excluir",
             save: "Salvar",
             deleteConfirmTitle: "Excluir Transação",
-            deleteConfirm: "Tem certeza que deseja excluir esta transação? Esta ação não pode ser desfeita."
+            deleteConfirm: "Tem certeza que deseja excluir esta transação? Esta ação não pode ser desfeita.",
+            account: "Conta"
         },
         time: {
             today: "Hoje",
@@ -494,7 +536,24 @@ export const translations = {
             confirm: "Confirmar"
         },
         transactions: {
-            emptyTitle: "Nenhuma transação encontrada"
+            emptyTitle: "Nenhuma transação encontrada",
+            details: "Detalhes da Transação"
+        },
+        accounts: {
+            addNew: "Adicionar Nova Conta",
+            editTitle: "Editar Conta",
+            createTitle: "Adicionar Nova Conta",
+            nameLabel: "Nome da Conta",
+            typeLabel: "Tipo de Conta",
+            balanceLabel: "Saldo Atual",
+            createBtn: "Criar Conta",
+            saveBtn: "Salvar Alterações",
+            types: {
+                bank: "Banco",
+                card: "Cartão",
+                savings: "Poupança",
+                cash: "Dinheiro"
+            }
         }
     },
     tr: {
@@ -606,6 +665,7 @@ export const translations = {
         common: {
             vsLastMonth: "geçen aya göre",
             items: "öğe",
+            allAccounts: "Tüm Hesaplar",
             searchPlaceholder: "Ara...",
             cancel: "İptal",
             create: "Oluştur",
@@ -614,7 +674,8 @@ export const translations = {
             save: "Kaydet",
             selectCategory: "Kategori Seçin",
             deleteConfirmTitle: "İşlemi Sil",
-            deleteConfirm: "Bu işlemi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz."
+            deleteConfirm: "Bu işlemi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+            account: "Hesap"
         },
         time: {
             today: "Bugün",
@@ -667,7 +728,24 @@ export const translations = {
             confirm: "Onayla"
         },
         transactions: {
-            emptyTitle: "İşlem bulunamadı"
+            emptyTitle: "İşlem bulunamadı",
+            details: "İşlem Detayları"
+        },
+        accounts: {
+            addNew: "Yeni Hesap Ekle",
+            editTitle: "Hesabı Düzenle",
+            createTitle: "Yeni Hesap Ekle",
+            nameLabel: "Hesap Adı",
+            typeLabel: "Hesap Türü",
+            balanceLabel: "Mevcut Bakiye",
+            createBtn: "Hesap Oluştur",
+            saveBtn: "Değişiklikleri Kaydet",
+            types: {
+                bank: "Banka",
+                card: "Kart",
+                savings: "Birikim",
+                cash: "Nakit"
+            }
         }
     }
 };

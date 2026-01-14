@@ -5,17 +5,30 @@ import { ArrowLeft, Save, Plus, Trash2, TrendingUp, TrendingDown, CircleDot, Rep
 import { useLanguage } from '../context/LanguageContext';
 import { useCategories } from '../context/CategoriesContext';
 import { useTransactions } from '../context/TransactionsContext';
+import { useAccounts } from '../context/AccountsContext';
 
 const AddTransaction = () => {
   const navigate = useNavigate();
   const { t, tCategory } = useLanguage();
   const { getCategoriesByType } = useCategories();
   const { addTransaction } = useTransactions();
+  const { accounts, updateAccount } = useAccounts();
 
   // Memoize categories to avoid re-fetching on every render if possible, 
   // but context provided functions usually return array.
   const expenseCategories = getCategoriesByType('expense');
   const incomeCategories = getCategoriesByType('income');
+
+  // Set default account when accounts are loaded
+  React.useEffect(() => {
+    if (accounts.length > 0) {
+      const defaultAcc = accounts[0];
+      setTransactions(prev => prev.map(t => ({
+        ...t,
+        accountId: t.accountId || defaultAcc.id
+      })));
+    }
+  }, [accounts]);
 
   const [transactions, setTransactions] = useState([
     {
@@ -42,6 +55,7 @@ const AddTransaction = () => {
         type: 'expense',
         mode: 'single',
         date: new Date().toISOString().split('T')[0],
+        accountId: accounts.length > 0 ? accounts[0].id : '',
         category: '',
         title: '',
         amount: '',
@@ -120,6 +134,58 @@ const AddTransaction = () => {
           recurringSeriesId: seriesId,
           recurringTransactionCount: i + 1,
           totalRecurringTransactions: count
+        });
+      }
+    });
+
+    // Update Account Balances
+    const balanceUpdates = {};
+    transactions.forEach(tx => {
+      if (!tx.accountId) return;
+
+      const count = tx.mode === 'recurring' ? parseInt(tx.recurringCount) || 1 : 1;
+      const originalAmount = parseFloat(tx.amount) || 0;
+      let amountPerTx = originalAmount;
+      if (tx.mode === 'recurring' && tx.recurringPricingMode === 'total') {
+        amountPerTx = originalAmount / count;
+      }
+
+      // Calculate total impact for THIS batch submission
+      // Only counting transactions that are NOT in the future (simple logic: if date <= today)
+      // However, for recurring, we usually only deduct the *first* one if it's today.
+      // For simplicity based on user request "when transaction is added, will change balance":
+      // We will update balance for ALL added transactions that are <= today.
+
+      const [y, m, d] = tx.date.split('-').map(Number);
+
+      for (let i = 0; i < count; i++) {
+        let txDate = new Date(y, m - 1, d);
+        if (i > 0) {
+          // ... (re-calculating date same as above logic, duplicating slightly but simplest for separation)
+          if (tx.recurringFrequency === 'weekly') txDate.setDate(txDate.getDate() + (i * 7));
+          else if (tx.recurringFrequency === 'monthly') txDate.setMonth(txDate.getMonth() + i);
+          else if (tx.recurringFrequency === 'yearly') txDate.setFullYear(txDate.getFullYear() + i);
+        }
+
+        // Check if effective now
+        if (txDate <= new Date()) {
+          const currentDelta = balanceUpdates[tx.accountId] || 0;
+          if (tx.type === 'income') {
+            balanceUpdates[tx.accountId] = currentDelta + amountPerTx;
+          } else {
+            balanceUpdates[tx.accountId] = currentDelta - amountPerTx;
+          }
+        }
+      }
+    });
+
+    // Apply updates
+    Object.keys(balanceUpdates).forEach(accId => {
+      const acc = accounts.find(a => a.id === accId);
+      if (acc) {
+        updateAccount({
+          ...acc,
+          balance: acc.balance + balanceUpdates[accId]
         });
       }
     });
@@ -283,6 +349,23 @@ const AddTransaction = () => {
                     onChange={(e) => handleChange(tx.id, 'date', e.target.value)}
                     required
                   />
+                </div>
+
+                {/* Account */}
+                <div className="field-group">
+                  <select
+                    value={tx.accountId || ''}
+                    onChange={(e) => handleChange(tx.id, 'accountId', e.target.value)}
+                    required
+                    className={!tx.accountId ? 'placeholder' : ''}
+                  >
+                    <option value="" disabled>Select Account</option>
+                    {accounts.map(acc => (
+                      <option key={acc.id} value={acc.id}>
+                        {acc.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 {/* Category */}
@@ -503,7 +586,7 @@ const AddTransaction = () => {
 
                 .row-grid {
                     display: grid;
-                    grid-template-columns: 100px 135px 160px 1fr 120px; /* Removed mode column */
+                    grid-template-columns: 100px 135px 140px 160px 1fr 120px; /* Added Account Column */
                     gap: 0.75rem;
                     align-items: center;
                 }
@@ -675,7 +758,8 @@ const AddTransaction = () => {
                         grid-template-columns: 1fr 1fr;
                         grid-template-areas: 
                             "type date"
-                            "cat cat" /* Category now spans two columns */
+                            "acc acc"
+                            "cat cat"
                             "title title"
                             "amt amt";
                         gap: 0.75rem;
@@ -683,8 +767,8 @@ const AddTransaction = () => {
                     
                     .type-select { grid-area: type; }
                     .date-input { grid-area: date; }
-                    /* Mode selector is now outside row-grid */
-                    .field-group:nth-child(3) { grid-area: cat; } /* Category is now the 3rd child in row-grid */
+                    .field-group:nth-child(3) { grid-area: acc; } /* Account is 3rd */
+                    .field-group:nth-child(4) { grid-area: cat; } /* Category is 4th */
                     .field-group.flex-2 { grid-area: title; }
                     .amount-input { grid-area: amt; }
                     

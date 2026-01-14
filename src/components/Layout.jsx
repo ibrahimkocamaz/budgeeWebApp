@@ -72,6 +72,10 @@ const Layout = ({ children }) => {
             <PieChart size={20} />
             {!collapsed && <span>{t('sidebar.budgets')}</span>}
           </Link>
+          <Link to="/recurring" className={`nav-item ${isActive('/recurring') ? 'active' : ''}`} title={collapsed ? t('sidebar.recurring') : ''}>
+            <Repeat size={20} />
+            {!collapsed && <span>{t('sidebar.recurring')}</span>}
+          </Link>
           <Link to="/accounts" className={`nav-item ${isActive('/accounts') ? 'active' : ''}`} title={collapsed ? t('sidebar.accounts') : ''}>
             <Wallet size={20} />
             {!collapsed && <span>{t('sidebar.accounts')}</span>}
@@ -79,10 +83,6 @@ const Layout = ({ children }) => {
           <Link to="/categories" className={`nav-item ${isActive('/categories') ? 'active' : ''}`} title={collapsed ? t('sidebar.categories') : ''}>
             <Tags size={20} />
             {!collapsed && <span>{t('sidebar.categories')}</span>}
-          </Link>
-          <Link to="/recurring" className={`nav-item ${isActive('/recurring') ? 'active' : ''}`} title={collapsed ? t('sidebar.recurring') : ''}>
-            <Repeat size={20} />
-            {!collapsed && <span>{t('sidebar.recurring')}</span>}
           </Link>
         </nav>
 

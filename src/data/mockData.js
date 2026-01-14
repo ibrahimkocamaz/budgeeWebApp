@@ -10,6 +10,36 @@ export const mockSummary = {
   savings: 3200.50
 };
 
+export const mockAccounts = [
+  {
+    id: 'acc1',
+    name: 'Main Checking',
+    type: 'Bank',
+    balance: 5450.50,
+    currency: 'USD',
+    color: '#0aac35',
+    icon: 'Landmark'
+  },
+  {
+    id: 'acc2',
+    name: 'Savings',
+    type: 'Savings',
+    balance: 7000.00,
+    currency: 'USD',
+    color: '#2196f3',
+    icon: 'PiggyBank'
+  },
+  {
+    id: 'acc3',
+    name: 'Wallet',
+    type: 'Cash',
+    balance: 120.00,
+    currency: 'USD',
+    color: '#ff9800',
+    icon: 'Wallet'
+  }
+];
+
 export const mockTransactions = [
   {
     id: 'tx1',
@@ -19,7 +49,9 @@ export const mockTransactions = [
     description: 'Weekly Groceries',
     paymentType: 'single',
     type: 'expense',
-    userId: 'user1'
+    type: 'expense',
+    userId: 'user1',
+    accountId: 'acc1'
   },
   {
     id: 'tx1b',
@@ -29,7 +61,9 @@ export const mockTransactions = [
     description: 'Taxi to Office',
     paymentType: 'single',
     type: 'expense',
-    userId: 'user1'
+    type: 'expense',
+    userId: 'user1',
+    accountId: 'acc3'
   },
   {
     id: 'tx2',
@@ -39,7 +73,9 @@ export const mockTransactions = [
     description: 'Tech Corp Salary',
     paymentType: 'single',
     type: 'income',
-    userId: 'user1'
+    type: 'income',
+    userId: 'user1',
+    accountId: 'acc1'
   },
   {
     id: 'tx3',
@@ -49,7 +85,9 @@ export const mockTransactions = [
     description: 'Uber Ride',
     paymentType: 'single',
     type: 'expense',
-    userId: 'user1'
+    type: 'expense',
+    userId: 'user1',
+    accountId: 'acc1'
   },
   {
     id: 'tx4',
@@ -65,7 +103,8 @@ export const mockTransactions = [
     items: {
       parentTransactionId: 'parent_rent_2026'
     },
-    userId: 'user1'
+    userId: 'user1',
+    accountId: 'acc1'
   },
   {
     id: 'tx5',
@@ -75,7 +114,9 @@ export const mockTransactions = [
     description: 'Spotify Premium',
     paymentType: 'single',
     type: 'expense',
-    userId: 'user1'
+    type: 'expense',
+    userId: 'user1',
+    accountId: 'acc2'
   },
   {
     id: 'tx6',
@@ -85,7 +126,9 @@ export const mockTransactions = [
     description: 'New Sneakers',
     paymentType: 'single',
     type: 'expense',
-    userId: 'user1'
+    type: 'expense',
+    userId: 'user1',
+    accountId: 'acc1'
   }
 ];
 
