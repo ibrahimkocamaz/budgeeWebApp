@@ -38,7 +38,7 @@ const SpendingChart = () => {
                     name: tCategory(name),
                     value,
                     color: categoryObj ? categoryObj.color : getCategoryColor(name),
-                    icon: categoryObj ? getCategoryIcon(categoryObj.iconKey) : getCategoryIcon(name)
+                    icon: categoryObj ? getCategoryIcon(categoryObj.icon_key) : getCategoryIcon(name)
                 };
             })
             .sort((a, b) => b.value - a.value);

@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Save, Plus, Trash2, TrendingUp, TrendingDown, CircleDot, Repeat, CalendarRange, ChevronLeft } from 'lucide-react';
+import { ArrowLeft, Save, Plus, Trash2, TrendingUp, TrendingDown, CircleDot, Repeat, CalendarRange, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useCategories } from '../context/CategoriesContext';
 import { useTransactions } from '../context/TransactionsContext';
@@ -87,20 +87,19 @@ const AddTransaction = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("Submitting Batch Transactions:", transactions);
 
+    const promises = [];
+
     transactions.forEach(tx => {
-      const baseDate = new Date(tx.date); // This treats YYYY-MM-DD as UTC, but since we just want to manipulate date parts, let's parse component-wise to be safe
+      const baseDate = new Date(tx.date);
       const [y, m, d] = tx.date.split('-').map(Number);
-      // Create a local date object for the start
-      // Note: month in Date is 0-indexed
 
       const count = tx.mode === 'recurring' ? parseInt(tx.recurringCount) || 1 : 1;
       const originalAmount = parseFloat(tx.amount) || 0;
 
-      // Calculate amount per transaction
       let amountPerTx = originalAmount;
       if (tx.mode === 'recurring' && tx.recurringPricingMode === 'total') {
         amountPerTx = originalAmount / count;
@@ -109,7 +108,6 @@ const AddTransaction = () => {
       const seriesId = tx.mode === 'recurring' ? `series_${Date.now()}_${Math.random().toString(36).substr(2, 9)}` : null;
 
       for (let i = 0; i < count; i++) {
-        // Calculate Date
         let txDate = new Date(y, m - 1, d);
 
         if (i > 0) {
@@ -122,23 +120,45 @@ const AddTransaction = () => {
           }
         }
 
-        addTransaction({
+        // Push the promise to array
+        promises.push(addTransaction({
           ...tx,
           id: Date.now() + Math.random(),
           date: txDate.toISOString(),
           paymentType: tx.mode,
           amount: amountPerTx.toString(),
           description: tx.title,
-          // Add metadata for recurring
           recurring: tx.mode === 'recurring' ? 1 : 0,
           recurringSeriesId: seriesId,
           recurringTransactionCount: i + 1,
           totalRecurringTransactions: count
-        });
+        }));
       }
     });
 
-    // Update Account Balances
+    try {
+      const results = await Promise.all(promises);
+      const errors = results.filter(r => r.error).map(r => r.error);
+
+      if (errors.length > 0) {
+        console.error(errors);
+        alert(`Error saving transactions: ${errors[0].message}`);
+        return; // Don't navigate if error
+      }
+
+      // ... Only update accounts and navigate if success ...
+      // Update Account Balances (Local Context Update - though better to re-fetch accounts)
+      // For now keeping existing logic but simplified or moved:
+      updateLocalBalances();
+
+      navigate('/');
+    } catch (err) {
+      console.error(err);
+      alert('Unexpected error saving transactions');
+    }
+  };
+
+  const updateLocalBalances = () => {
     const balanceUpdates = {};
     transactions.forEach(tx => {
       if (!tx.accountId) return;
@@ -150,24 +170,16 @@ const AddTransaction = () => {
         amountPerTx = originalAmount / count;
       }
 
-      // Calculate total impact for THIS batch submission
-      // Only counting transactions that are NOT in the future (simple logic: if date <= today)
-      // However, for recurring, we usually only deduct the *first* one if it's today.
-      // For simplicity based on user request "when transaction is added, will change balance":
-      // We will update balance for ALL added transactions that are <= today.
-
       const [y, m, d] = tx.date.split('-').map(Number);
 
       for (let i = 0; i < count; i++) {
         let txDate = new Date(y, m - 1, d);
         if (i > 0) {
-          // ... (re-calculating date same as above logic, duplicating slightly but simplest for separation)
           if (tx.recurringFrequency === 'weekly') txDate.setDate(txDate.getDate() + (i * 7));
           else if (tx.recurringFrequency === 'monthly') txDate.setMonth(txDate.getMonth() + i);
           else if (tx.recurringFrequency === 'yearly') txDate.setFullYear(txDate.getFullYear() + i);
         }
 
-        // Check if effective now
         if (txDate <= new Date()) {
           const currentDelta = balanceUpdates[tx.accountId] || 0;
           if (tx.type === 'income') {
@@ -179,7 +191,6 @@ const AddTransaction = () => {
       }
     });
 
-    // Apply updates
     Object.keys(balanceUpdates).forEach(accId => {
       const acc = accounts.find(a => a.id === accId);
       if (acc) {
@@ -189,8 +200,6 @@ const AddTransaction = () => {
         });
       }
     });
-
-    navigate('/');
   };
 
   const xf_amount_clean = (amt) => {
@@ -247,8 +256,9 @@ const AddTransaction = () => {
                         className="mode-btn-small active dropdown-trigger"
                         onClick={() => setActiveModeRowId(tx.id)}
                       >
-                        <ChevronLeft size={14} style={{ marginRight: 4, opacity: 0.7 }} />
+                        <ChevronLeft size={14} className="folder-arrow desktop-only-inline" style={{ marginRight: 4, opacity: 0.7 }} />
                         {t(`addTransaction.${tx.mode}`) || tx.mode}
+                        <ChevronRight size={14} className="folder-arrow mobile-only-inline" style={{ marginLeft: 4, opacity: 0.7 }} />
                       </button>
                     )}
                   </div>
@@ -571,8 +581,14 @@ const AddTransaction = () => {
                     padding-right: 10px;
                 }
 
+                .desktop-only-inline { display: inline-block !important; }
+                .mobile-only-inline { display: none !important; }
+
                 /* Mobile Adjustment for Header */
                 @media (max-width: 600px) {
+                    .desktop-only-inline { display: none !important; }
+                    .mobile-only-inline { display: inline-block !important; }
+
                     .row-header {
                         flex-direction: column;
                         align-items: flex-start;
@@ -580,7 +596,23 @@ const AddTransaction = () => {
                     }
                     .row-header-actions {
                         width: 100%;
-                        justify-content: space-between;
+                        justify-content: flex-start;
+                        flex-wrap: wrap; /* Allow wrapping */
+                        gap: 0.75rem;
+                    }
+                    .recurring-inline-controls {
+                        width: 100%;
+                        margin-left: 0;
+                        padding-left: 0;
+                        border-left: none;
+                        border-top: 1px solid var(--color-divider);
+                        padding-top: 0.75rem;
+                        justify-content: flex-start; /* Changed from space-between */
+                        flex-wrap: wrap; /* CRITICAL FIX */
+                        gap: 1rem;
+                    }
+                    .delete-btn {
+                        margin-left: auto; /* Push to right */
                     }
                 }
 
@@ -785,6 +817,19 @@ const AddTransaction = () => {
                     margin-left: 12px;
                     padding-left: 12px;
                     border-left: 1px solid var(--color-divider);
+                }
+
+                @media (max-width: 768px) {
+                    .total-preview {
+                        display: none;
+                    }
+                    .footer-summary {
+                         justify-content: center;
+                    }
+                    .submit-btn-large {
+                        width: 100%;
+                        justify-content: center;
+                    }
                 }
 
                 .inline-field {

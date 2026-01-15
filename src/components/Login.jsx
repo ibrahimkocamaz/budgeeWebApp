@@ -1,0 +1,325 @@
+import React, { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate, Link } from 'react-router-dom';
+
+const Login = () => {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const { signIn, signInWithGoogle, resetPassword } = useAuth();
+    const navigate = useNavigate();
+    const [error, setError] = useState('');
+    const [message, setMessage] = useState(''); // For success messages
+    const [loading, setLoading] = useState(false);
+    const [googleHover, setGoogleHover] = useState(false);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            setError('');
+            setMessage('');
+            setLoading(true);
+            const { error } = await signIn(email, password);
+            if (error) throw error;
+            navigate('/');
+        } catch (err) {
+            setError('Failed to sign in: ' + err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleResetPassword = async () => {
+        if (!email) {
+            setError('Please enter your email address to reset your password.');
+            return;
+        }
+        try {
+            setError('');
+            setMessage('');
+            setLoading(true);
+            const { error } = await resetPassword(email);
+            if (error) throw error;
+            setMessage('Password reset email sent! Check your inbox.');
+        } catch (err) {
+            setError('Failed to reset password: ' + err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const styles = {
+        page: {
+            display: 'flex',
+            minHeight: '100vh',
+            width: '100vw',
+        },
+        brandSection: {
+            flex: '1.2',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'flex-end', // Align items to the right
+            textAlign: 'right',     // Align text to the right
+            padding: '4rem',
+            paddingRight: '8rem',   // Extra padding to account for diagonal cut
+            background: 'linear-gradient(135deg, #b2f0c4ff 0%, #e1fee9 100%)', // Mint Gradient
+        },
+        rightSection: {
+            flex: '1',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center', // Center the card
+            padding: '2rem',
+            backgroundColor: '#ffffff',
+        },
+        // The Dark Floating Card
+        loginCard: {
+            backgroundColor: '#12151A', // App Dark Mode Background
+            padding: '3rem',
+            borderRadius: '24px',
+            width: '100%',
+            maxWidth: '420px',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
+            color: 'white',
+        },
+        logoContainer: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem',
+            marginBottom: '1rem',
+        },
+        logoIcon: {
+            width: '48px',
+            height: '48px',
+            objectFit: 'contain'
+        },
+        brandName: {
+            fontFamily: "'Roboto', sans-serif",
+            fontSize: '2.5rem',
+            fontWeight: 'bold',
+            color: '#333',
+        },
+        heroHeadline: {
+            fontSize: '4rem', // Bigger headline
+            fontWeight: '800',
+            color: '#0aac35',
+            lineHeight: '1.1',
+            marginBottom: '1rem',
+        },
+        heroSub: {
+            fontSize: '1.1rem',
+            color: '#555',
+            maxWidth: '500px',
+            lineHeight: '1.6',
+        },
+        title: {
+            fontSize: '2rem',
+            fontWeight: 'bold',
+            marginBottom: '0.5rem',
+            color: 'white',
+        },
+        subtitle: {
+            marginBottom: '2rem',
+            color: '#aaa',
+            fontSize: '0.95rem',
+        },
+        form: {
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1.2rem',
+        },
+        inputGroup: {
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.5rem',
+        },
+        label: {
+            fontSize: '0.85rem',
+            fontWeight: '600',
+            color: '#ccc',
+            marginLeft: '4px',
+        },
+        input: {
+            padding: '1rem',
+            borderRadius: '12px',
+            border: 'none',
+            backgroundColor: 'white', // White inputs on dark card
+            color: '#333',
+            fontSize: '1rem',
+            outline: 'none',
+            fontWeight: '500',
+            transition: 'all 0.2s',
+        },
+        button: {
+            padding: '1rem',
+            borderRadius: '12px',
+            border: 'none',
+            backgroundColor: '#0aac35', // Green button
+            color: 'white',
+            fontWeight: 'bold',
+            fontSize: '1rem',
+            cursor: 'pointer',
+            marginTop: '1rem',
+            transition: 'opacity 0.2s, transform 0.1s',
+            boxShadow: '0 4px 12px rgba(10, 172, 53, 0.4)',
+        },
+        googleButton: {
+            padding: '1rem',
+            borderRadius: '12px',
+            border: '1px solid #333',
+            backgroundColor: googleHover ? '#252525' : '#1a1a1a',
+            color: 'white',
+            fontWeight: '600',
+            fontSize: '1rem',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '12px',
+            transition: 'all 0.2s',
+        },
+        error: {
+            backgroundColor: 'rgba(239, 68, 68, 0.2)',
+            color: '#fca5a5',
+            padding: '0.75rem',
+            borderRadius: '8px',
+            marginBottom: '1rem',
+            fontSize: '0.9rem',
+        },
+        success: { // Added success message style
+            backgroundColor: 'rgba(16, 185, 129, 0.2)',
+            color: '#6ee7b7',
+            padding: '0.75rem',
+            borderRadius: '8px',
+            marginBottom: '1rem',
+            fontSize: '0.9rem',
+        },
+        footer: {
+            marginTop: '2rem',
+            textAlign: 'center',
+            fontSize: '0.9rem',
+            color: '#888',
+        },
+        link: {
+            color: '#0aac35',
+            textDecoration: 'none',
+            fontWeight: 'bold',
+            marginLeft: '0.25rem',
+        },
+        forgotPassword: {
+            alignSelf: 'flex-end',
+            color: '#aaa',
+            fontSize: '0.85rem',
+            textDecoration: 'none',
+            cursor: 'pointer',
+            marginTop: '-0.5rem', // Pull it up a bit closer to password field
+            border: 'none',
+            background: 'none',
+            padding: 0,
+        },
+        divider: {
+            display: 'flex',
+            alignItems: 'center',
+            margin: '1rem 0'
+        },
+        dividerLine: {
+            flex: 1,
+            height: '1px',
+            backgroundColor: '#333'
+        }
+    };
+
+    return (
+        <div style={styles.page}>
+            {/* Left Side - Branding */}
+            <div style={styles.brandSection}>
+                <div style={styles.logoContainer}>
+                    <img src="/assets/budgee_icon.png" alt="Budgee Logo" style={styles.logoIcon} />
+                    <span style={styles.brandName}>Budgee</span>
+                </div>
+                <div style={styles.heroHeadline}>
+                    Take control <br /> of your finances.
+                </div>
+                <div style={styles.heroSub}>
+                    Budgee is the easiest way to keep track of your finances and help you achieve your goals.
+                </div>
+            </div>
+
+            {/* Right Side - Dark Floating Card */}
+            <div style={styles.rightSection}>
+                <div style={styles.loginCard}>
+                    <h2 style={styles.title}>Welcome back</h2>
+                    <p style={styles.subtitle}>Enter your details to access your account.</p>
+
+                    {error && <div style={styles.error}>{error}</div>}
+                    {message && <div style={styles.success}>{message}</div>}
+
+                    <form onSubmit={handleSubmit} style={styles.form}>
+                        <div style={styles.inputGroup}>
+                            <label style={styles.label}>Email Address</label>
+                            <input
+                                type="email"
+                                placeholder="name@example.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                style={styles.input}
+                                required
+                            />
+                        </div>
+
+                        <div style={styles.inputGroup}>
+                            <label style={styles.label}>Password</label>
+                            <input
+                                type="password"
+                                placeholder="••••••••"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                style={styles.input}
+                                required
+                            />
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={handleResetPassword}
+                            style={styles.forgotPassword}
+                        >
+                            Forgot Password?
+                        </button>
+
+                        <button type="submit" disabled={loading} style={styles.button}>
+                            {loading ? 'Logging in...' : 'Sign In'}
+                        </button>
+
+                        <div style={styles.divider}>
+                            <div style={styles.dividerLine}></div>
+                            <span style={{ padding: '0 10px', color: '#555', fontSize: '0.8rem' }}>OR</span>
+                            <div style={styles.dividerLine}></div>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setLoading(true);
+                                signInWithGoogle();
+                            }}
+                            onMouseEnter={() => setGoogleHover(true)}
+                            onMouseLeave={() => setGoogleHover(false)}
+                            disabled={loading}
+                            style={styles.googleButton}
+                        >
+                            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style={{ width: '20px', height: '20px' }} />
+                            Sign in with Google
+                        </button>
+                    </form>
+
+                    <div style={styles.footer}>
+                        New to Budgee? <Link to="/signup" style={styles.link}>Create Account</Link>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default Login;

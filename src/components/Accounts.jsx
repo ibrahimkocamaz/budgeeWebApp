@@ -147,11 +147,13 @@ const Accounts = () => {
     };
 
     const getIcon = (iconName) => {
-        switch (iconName) {
-            case 'Landmark': return Landmark;
-            case 'CreditCard': return CreditCard;
-            case 'PiggyBank': return PiggyBank;
-            case 'Wallet': return Wallet;
+        if (!iconName) return Landmark;
+        const name = iconName.toLowerCase();
+        switch (name) {
+            case 'landmark': case 'bank': return Landmark;
+            case 'creditcard': case 'card': return CreditCard;
+            case 'piggybank': case 'savings': return PiggyBank;
+            case 'wallet': case 'cash': return Wallet;
             default: return Landmark;
         }
     };

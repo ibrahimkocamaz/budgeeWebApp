@@ -1,16 +1,20 @@
 import React, { useState } from 'react';
-import { Home, List, PieChart, Settings, LogOut, Wallet, Tags, Repeat, Plus, Globe, Moon, Sun, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Home, List, PieChart, Settings, LogOut, Wallet, Tags, Repeat, Plus, Globe, Moon, Sun, ChevronLeft, ChevronRight, Menu, X } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import LanguageCurrencyModal from './LanguageCurrencyModal';
 
+import { useAuth } from '../context/AuthContext';
+
 const Layout = ({ children }) => {
   const location = useLocation();
   const { t } = useLanguage();
   const { isDark, toggleTheme } = useTheme();
+  const { signOut, user } = useAuth(); // Get signOut and user
   const isActive = (path) => location.pathname === path;
   const [showModal, setShowModal] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   // Initialize collapsed state based on screen width
   const [collapsed, setCollapsed] = useState(window.innerWidth <= 1100);
 
@@ -28,6 +32,16 @@ const Layout = ({ children }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  const handleLogout = async (e) => {
+    e.preventDefault();
+    try {
+      await signOut();
+      // AuthContext usually handles redirect, or we can force it here if needed
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
   const getPageTitle = (path) => {
     switch (path) {
       case '/': return t('dashboard.title');
@@ -42,10 +56,12 @@ const Layout = ({ children }) => {
     }
   };
 
+
   return (
     <div className="layout">
       {/* Sidebar */}
-      <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
+      {/* Sidebar - Hidden on Mobile */}
+      <aside className={`sidebar ${collapsed ? 'collapsed' : ''} desktop-only`}>
         <button
           className="collapse-btn-floating"
           onClick={() => setCollapsed(!collapsed)}
@@ -91,49 +107,121 @@ const Layout = ({ children }) => {
             <Settings size={20} />
             {!collapsed && <span>{t('sidebar.settings')}</span>}
           </Link>
-          <a href="#" className="nav-item logout" title={collapsed ? t('sidebar.logout') : ''}>
+          <Link
+            to="/login"
+            onClick={handleLogout}
+            className="nav-item logout"
+            title={collapsed ? t('sidebar.logout') : ''}
+          >
             <LogOut size={20} />
             {!collapsed && <span>{t('sidebar.logout')}</span>}
-          </a>
+          </Link>
         </div>
       </aside>
 
       {/* Main Content */}
       <main className="main-content">
-        <header className="top-bar">
-          <h2 className="page-title">{getPageTitle(location.pathname)}</h2>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+        {location.pathname !== '/add' && (
+          <header className="top-bar">
+            <h2 className="page-title">{getPageTitle(location.pathname)}</h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+              <div className="header-actions desktop-only">
+                <button
+                  className="icon-btn"
+                  onClick={toggleTheme}
+                  title={t('settings.darkMode')}
+                >
+                  {isDark ? <Moon size={20} /> : <Sun size={20} />}
+                </button>
 
-            <button
-              className="icon-btn"
-              onClick={toggleTheme}
-              title={t('settings.darkMode')}
-            >
-              {isDark ? <Moon size={20} /> : <Sun size={20} />}
-            </button>
+                <button
+                  className="icon-btn"
+                  onClick={() => setShowModal(true)}
+                  title={t('settings.language')}
+                >
+                  <Globe size={20} />
+                </button>
+              </div>
 
-            <button
-              className="icon-btn"
-              onClick={() => setShowModal(true)}
-              title={t('settings.language')}
-            >
-              <Globe size={20} />
-            </button>
+              {/* Desktop Profile (Right) */}
+              <div className="user-profile desktop-only">
+                {user?.user_metadata?.avatar_url ? (
+                  <img
+                    src={user.user_metadata.avatar_url}
+                    alt="Profile"
+                    className="avatar-circle"
+                    style={{ objectFit: 'cover' }}
+                  />
+                ) : (
+                  <div className="avatar-circle">{user?.email?.charAt(0).toUpperCase()}</div>
+                )}
+                <span className="user-name">{user?.user_metadata?.full_name || user?.email || 'User'}</span>
+              </div>
 
-            <div className="user-profile">
-              <span className="user-name">Ibrahim</span>
-              <div className="avatar-circle">I</div>
+              {/* Mobile Hamburger (Right) */}
+              <button
+                className="icon-btn mobile-only-flex"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                style={{ zIndex: 60 }} // Above overlay
+              >
+                {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              </button>
             </div>
+          </header>
+        )}
+
+        {/* Mobile Menu Overlay */}
+        {mobileMenuOpen && (
+          <div className="mobile-menu-overlay">
+            <nav className="mobile-menu-nav">
+              <Link to="/recurring" className="mobile-menu-item" onClick={() => setMobileMenuOpen(false)}>
+                <Repeat size={20} />
+                <span>{t('sidebar.recurring')}</span>
+              </Link>
+              <Link to="/accounts" className="mobile-menu-item" onClick={() => setMobileMenuOpen(false)}>
+                <Wallet size={20} />
+                <span>{t('sidebar.accounts')}</span>
+              </Link>
+              <Link to="/categories" className="mobile-menu-item" onClick={() => setMobileMenuOpen(false)}>
+                <Tags size={20} />
+                <span>{t('sidebar.categories')}</span>
+              </Link>
+            </nav>
           </div>
-        </header>
+        )}
         <div className="content-scroll">
           {children}
         </div>
       </main >
 
-      <Link to="/add" className="fab-add-transaction" title={t('dashboard.addTransaction')}>
-        <Plus size={24} />
-      </Link>
+      {!mobileMenuOpen && (
+        <Link to="/add" className="fab-add-transaction" title={t('dashboard.addTransaction')}>
+          <Plus size={24} />
+        </Link>
+      )}
+
+      {/* Bottom Navigation Bar - Mobile Only */}
+      <nav className="bottom-nav mobile-only-flex">
+        <Link to="/" className={`bottom-nav-item ${isActive('/') ? 'active' : ''}`}>
+          <Home size={24} />
+          <span>{t('sidebar.dashboard')}</span>
+        </Link>
+        <Link to="/transactions" className={`bottom-nav-item ${isActive('/transactions') ? 'active' : ''}`}>
+          <List size={24} />
+          <span>{t('sidebar.transactions')}</span>
+        </Link>
+        <div className="bottom-nav-spacer"></div>
+        {/* Middle Spacer for FAB */}
+
+        <Link to="/budgets" className={`bottom-nav-item ${isActive('/budgets') ? 'active' : ''}`}>
+          <PieChart size={24} />
+          <span>{t('sidebar.budgets')}</span>
+        </Link>
+        <Link to="/settings" className={`bottom-nav-item ${isActive('/settings') ? 'active' : ''}`}>
+          <Settings size={24} />
+          <span>{t('sidebar.settings') || 'Settings'}</span>
+        </Link>
+      </nav>
 
       {showModal && <LanguageCurrencyModal onClose={() => setShowModal(false)} />}
 
@@ -335,7 +423,17 @@ const Layout = ({ children }) => {
         .user-profile {
           display: flex;
           align-items: center;
-          gap: 1rem;
+          gap: 12px;
+          background-color: var(--bg-card);
+          padding: 6px 12px;
+          border-radius: 9999px;
+          border: 1px solid var(--color-divider);
+          transition: all 0.2s ease;
+        }
+        
+        .user-profile:hover {
+            border-color: var(--color-brand);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
 
         .icon-btn {
@@ -365,12 +463,153 @@ const Layout = ({ children }) => {
           align-items: center;
           justify-content: center;
           font-weight: bold;
+          font-size: 1rem;
+          color: white;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-main);
         }
 
         .content-scroll {
           flex: 1;
           overflow-y: auto;
           padding: 2rem;
+        }
+
+        /* --- Mobile Responsive Styles --- */
+        .desktop-only { display: flex; }
+        .mobile-only-flex { display: none; }
+
+        @media (max-width: 768px) {
+            .desktop-only { display: none !important; }
+            .mobile-only-flex { display: flex !important; }
+
+            .layout {
+                flex-direction: column;
+            }
+
+            .main-content {
+                padding-bottom: 80px; /* Space for bottom nav */
+            }
+
+            .top-bar {
+                padding: 0 1rem;
+                height: 60px;
+            }
+
+            .page-title {
+                display: block;
+                font-size: 1.25rem;
+            }
+
+            .content-scroll {
+                padding: 1rem; /* Less padding on mobile */
+            }
+            
+            .content-scroll::-webkit-scrollbar {
+                display: none;
+            }
+
+            /* Bottom Nav */
+            .bottom-nav {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 65px; /* iOS standard-ish */
+                background-color: var(--bg-card);
+                border-top: 1px solid var(--color-divider);
+                display: flex;
+                justify-content: space-around;
+                align-items: center;
+                z-index: 50;
+                padding-bottom: env(safe-area-inset-bottom); /* iPhone Home Bar support */
+            }
+
+            .bottom-nav-item {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 4px;
+                color: var(--text-muted);
+                text-decoration: none;
+                font-size: 0.7rem;
+                height: 100%;
+            }
+
+            .bottom-nav-item.active {
+                color: var(--color-brand);
+            }
+
+            .bottom-nav-spacer {
+                width: 60px; /* Space for the floating button */
+            }
+
+            /* Floating Button Repositioning for Mobile */
+            .fab-add-transaction {
+                bottom: 24px;
+                right: 50%;
+                transform: translateX(50%);
+                width: 56px;
+                height: 56px;
+                border-radius: 50%;
+                border: 4px solid var(--bg-app); /* visual cut-out effect */
+                box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
+            }
+            
+            .fab-add-transaction:hover {
+                 transform: translateX(50%) translateY(-2px);
+            }
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .mobile-menu-overlay {
+            position: fixed;
+            top: 60px; /* Below header */
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--bg-app);
+            padding: 1rem;
+            z-index: 55;
+            display: flex;
+            flex-direction: column;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .mobile-menu-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .mobile-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            color: var(--text-main);
+            text-decoration: none;
+            font-size: 1.1rem;
+            font-weight: 500;
+            border: 1px solid var(--color-divider);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </div >

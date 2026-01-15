@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, Trash2, Edit2, GripVertical } from 'lucide-react';
-import { categoryIcons } from '../data/categoryOptions';
+import { categoryIcons, getCategoryIcon } from '../data/categoryOptions';
 import { useCategories } from '../context/CategoriesContext';
 import { useLanguage } from '../context/LanguageContext';
 import CategoryForm from './CategoryForm';
@@ -57,7 +57,7 @@ const ManageCategories = () => {
             </div>
             <div className="categories-list">
                 {items.map(cat => {
-                    const IconComponent = categoryIcons[cat.iconKey]?.icon || categoryIcons['food'].icon;
+                    const IconComponent = getCategoryIcon(cat.icon_key);
                     return (
                         <div key={cat.id} className="category-item-card">
                             <div className="cat-icon-circle" style={{ backgroundColor: cat.color }}>

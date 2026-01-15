@@ -153,7 +153,7 @@ const Budgets = ({ limit, simpleMode = false }) => {
                 <div className="budgets-grid">
                     {budgetsWithProgress.map(budget => {
                         const categoryObj = categories.find(c => c.name.toLowerCase() === budget.category.toLowerCase());
-                        const Icon = categoryObj ? getCategoryIcon(categoryObj.iconKey) : getCategoryIcon(budget.category);
+                        const Icon = categoryObj ? getCategoryIcon(categoryObj.icon_key) : getCategoryIcon(budget.category);
                         const color = categoryObj ? categoryObj.color : getCategoryColor(budget.category);
 
                         let progressColor = 'var(--color-success)';

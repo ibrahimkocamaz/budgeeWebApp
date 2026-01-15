@@ -1,14 +1,106 @@
-import { Lock, ChevronRight } from 'lucide-react';
+import { Lock, ChevronRight, Moon, Globe, DollarSign, User } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useSettings } from '../context/SettingsContext';
+import { useTheme } from '../context/ThemeContext';
+import { useCurrency } from '../context/CurrencyContext';
+import { useAuth } from '../context/AuthContext';
 
 const Settings = () => {
     const { t, language, changeLanguage } = useLanguage();
+    const { isDark, toggleTheme } = useTheme();
+    const { currency, setCurrency } = useCurrency();
     const { settings, updateSetting } = useSettings();
+    const { user } = useAuth();
 
     return (
         <div className="settings-container">
-            <h2 className="settings-title">{t('settings.title')}</h2>
+
+
+            {/* User Profile Section */}
+            <section className="settings-section mobile-only-section">
+                <div className="settings-card profile-card">
+                    <div className="profile-info">
+                        {user?.user_metadata?.avatar_url ? (
+                            <img src={user.user_metadata.avatar_url} alt="Profile" className="profile-avatar-large" />
+                        ) : (
+                            <div className="profile-avatar-large">{user?.email?.charAt(0).toUpperCase()}</div>
+                        )}
+                        <div className="profile-text">
+                            <h3 className="profile-name">{user?.user_metadata?.full_name || user?.email || 'User'}</h3>
+                            <p className="profile-email">{user?.email}</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Appearance Section - Mobile Only */}
+            <section className="settings-section mobile-only-section">
+                <h3 className="section-title">{t('settings.appearance') || 'Appearance'}</h3>
+                <div className="settings-card">
+                    <div className="settings-item">
+                        <div className="item-left">
+                            <div className="icon-circle">
+                                <Moon size={20} />
+                            </div>
+                            <span>{t('settings.darkMode') || 'Dark Mode'}</span>
+                        </div>
+                        <div className="item-right">
+                            <label className="switch">
+                                <input type="checkbox" checked={isDark} onChange={toggleTheme} />
+                                <span className="slider round"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Preferences Section - Mobile Only (Language/Currency) */}
+            <section className="settings-section mobile-only-section">
+                <h3 className="section-title">{t('settings.preferences') || 'Preferences'}</h3>
+                <div className="settings-card">
+                    <div className="settings-item border-bottom">
+                        <div className="item-left">
+                            <div className="icon-circle">
+                                <Globe size={20} />
+                            </div>
+                            <span>{t('settings.language') || 'Language'}</span>
+                        </div>
+                        <div className="item-right">
+                            <select
+                                className="settings-select"
+                                value={language}
+                                onChange={(e) => changeLanguage(e.target.value)}
+                            >
+                                <option value="en">English</option>
+                                <option value="es">Español</option>
+                                <option value="pt">Português</option>
+                                <option value="tr">Türkçe</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="settings-item">
+                        <div className="item-left">
+                            <div className="icon-circle">
+                                <DollarSign size={20} />
+                            </div>
+                            <span>{t('settings.currency') || 'Currency'}</span>
+                        </div>
+                        <div className="item-right">
+                            <select
+                                className="settings-select"
+                                value={currency}
+                                onChange={(e) => setCurrency(e.target.value)}
+                            >
+                                <option value="USD">USD ($)</option>
+                                <option value="EUR">EUR (€)</option>
+                                <option value="GBP">GBP (£)</option>
+                                <option value="TRY">TRY (₺)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
             {/* General Section */}
             <section className="settings-section">
@@ -189,10 +281,83 @@ const Settings = () => {
                     transform: translateX(24px);
                 }
 
+                .mobile-only-section {
+                    display: none;
+                }
+
+                @media (max-width: 768px) {
+                    .mobile-only-section {
+                        display: block;
+                    }
+                }
+
+                .settings-select {
+                    background-color: transparent;
+                    color: var(--text-main);
+                    border: none;
+                    font-size: 0.95rem;
+                    text-align: right;
+                    cursor: pointer;
+                    outline: none;
+                    padding-right: 0.5rem;
+                }
+                
+                .settings-select option {
+                    background-color: var(--bg-card);
+                    color: var(--text-main);
+                }
+
                 .slider.round {
                     border-radius: 34px;
                 }
 
+                /* Profile Card Styles */
+                .profile-card {
+                    padding: 1.5rem;
+                    display: flex;
+                    align-items: center;
+                    background: linear-gradient(135deg, var(--color-brand), var(--color-brand-hover));
+                    color: white;
+                }
+
+                .profile-info {
+                    display: flex;
+                    align-items: center;
+                    gap: 1.5rem;
+                }
+
+                .profile-avatar-large {
+                    width: 64px;
+                    height: 64px;
+                    border-radius: 50%;
+                    border: 3px solid rgba(255,255,255,0.3);
+                    background-color: rgba(255,255,255,0.2);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 1.5rem;
+                    font-weight: bold;
+                    color: white;
+                    object-fit: cover;
+                }
+
+                .profile-text {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 4px;
+                }
+
+                .profile-name {
+                    font-size: 1.25rem;
+                    font-weight: 700;
+                    margin: 0;
+                }
+
+                .profile-email {
+                    font-size: 0.9rem;
+                    opacity: 0.9;
+                    margin: 0;
+                }
             `}</style>
         </div>
     );

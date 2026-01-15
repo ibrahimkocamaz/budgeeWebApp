@@ -1,100 +1,100 @@
 import React, { useState } from 'react';
-import { availableColors, categoryIcons } from '../data/categoryOptions';
+import { availableColors, categoryIcons, pickerIcons } from '../data/categoryOptions';
 import { X, Check } from 'lucide-react';
 
 const CategoryForm = ({ initialData, onSave, onCancel, type }) => {
-    const [name, setName] = useState(initialData?.name || '');
-    const [selectedIcon, setSelectedIcon] = useState(initialData?.iconKey || 'food');
-    const [selectedColor, setSelectedColor] = useState(initialData?.color || availableColors[0]);
+  const [name, setName] = useState(initialData?.name || '');
+  const [selectedIcon, setSelectedIcon] = useState(initialData?.iconKey || 'food');
+  const [selectedColor, setSelectedColor] = useState(initialData?.color || availableColors[0]);
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        onSave({
-            id: initialData?.id || Date.now(),
-            name,
-            iconKey: selectedIcon,
-            color: selectedColor,
-            type
-        });
-    };
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave({
+      id: initialData?.id || Date.now(),
+      name,
+      iconKey: selectedIcon,
+      color: selectedColor,
+      type
+    });
+  };
 
-    const SelectedIconComponent = categoryIcons[selectedIcon]?.icon;
+  const SelectedIconComponent = categoryIcons[selectedIcon]?.icon;
 
-    return (
-        <div className="category-form-overlay">
-            <div className="category-form-modal">
-                <div className="modal-header">
-                    <h3>{initialData ? 'Edit Category' : 'New Category'}</h3>
-                    <button onClick={onCancel} className="close-btn"><X size={20} /></button>
-                </div>
+  return (
+    <div className="category-form-overlay">
+      <div className="category-form-modal">
+        <div className="modal-header">
+          <h3>{initialData ? 'Edit Category' : 'New Category'}</h3>
+          <button onClick={onCancel} className="close-btn"><X size={20} /></button>
+        </div>
 
-                <form onSubmit={handleSubmit} className="form-content">
-                    {/* Name Input */}
-                    <div className="form-group">
-                        <label>Category Name</label>
-                        <input
-                            type="text"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            placeholder="e.g. Groceries"
-                            className="text-input"
-                            autoFocus
-                        />
-                    </div>
+        <form onSubmit={handleSubmit} className="form-content">
+          {/* Name Input */}
+          <div className="form-group">
+            <label>Category Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Groceries"
+              className="text-input"
+              autoFocus
+            />
+          </div>
 
-                    {/* Icon Picker */}
-                    <div className="form-group">
-                        <label>Icon</label>
-                        <div className="icon-grid">
-                            {Object.entries(categoryIcons).map(([key, { icon: Icon }]) => (
-                                <button
-                                    key={key}
-                                    type="button"
-                                    className={`icon-btn ${selectedIcon === key ? 'selected' : ''}`}
-                                    onClick={() => setSelectedIcon(key)}
-                                    style={selectedIcon === key ? { backgroundColor: selectedColor, borderColor: selectedColor } : {}}
-                                >
-                                    <Icon size={20} color={selectedIcon === key ? 'white' : 'var(--text-muted)'} />
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Color Picker */}
-                    <div className="form-group">
-                        <label>Color</label>
-                        <div className="color-grid">
-                            {availableColors.map((color) => (
-                                <button
-                                    key={color}
-                                    type="button"
-                                    className={`color-btn ${selectedColor === color ? 'selected' : ''}`}
-                                    onClick={() => setSelectedColor(color)}
-                                    style={{ backgroundColor: color }}
-                                >
-                                    {selectedColor === color && <Check size={14} color="white" />}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Preview & Actions */}
-                    <div className="form-footer">
-                        <div className="preview">
-                            <span className="preview-label">Preview:</span>
-                            <div className="preview-pill" style={{ backgroundColor: selectedColor + '20', color: selectedColor }}>
-                                {SelectedIconComponent && <SelectedIconComponent size={16} />}
-                                <span>{name || 'New Category'}</span>
-                            </div>
-                        </div>
-                        <button type="submit" className="btn-save" style={{ backgroundColor: selectedColor }}>
-                            Save Category
-                        </button>
-                    </div>
-                </form>
+          {/* Icon Picker */}
+          <div className="form-group">
+            <label>Icon</label>
+            <div className="icon-grid">
+              {Object.entries(pickerIcons).map(([key, { icon: Icon }]) => (
+                <button
+                  key={key}
+                  type="button"
+                  className={`icon-btn ${selectedIcon === key ? 'selected' : ''}`}
+                  onClick={() => setSelectedIcon(key)}
+                  style={selectedIcon === key ? { backgroundColor: selectedColor, borderColor: selectedColor } : {}}
+                >
+                  <Icon size={20} color={selectedIcon === key ? 'white' : 'var(--text-muted)'} />
+                </button>
+              ))}
             </div>
+          </div>
 
-            <style>{`
+          {/* Color Picker */}
+          <div className="form-group">
+            <label>Color</label>
+            <div className="color-grid">
+              {availableColors.map((color) => (
+                <button
+                  key={color}
+                  type="button"
+                  className={`color-btn ${selectedColor === color ? 'selected' : ''}`}
+                  onClick={() => setSelectedColor(color)}
+                  style={{ backgroundColor: color }}
+                >
+                  {selectedColor === color && <Check size={14} color="white" />}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Preview & Actions */}
+          <div className="form-footer">
+            <div className="preview">
+              <span className="preview-label">Preview:</span>
+              <div className="preview-pill" style={{ backgroundColor: selectedColor + '20', color: selectedColor }}>
+                {SelectedIconComponent && <SelectedIconComponent size={16} />}
+                <span>{name || 'New Category'}</span>
+              </div>
+            </div>
+            <button type="submit" className="btn-save" style={{ backgroundColor: selectedColor }}>
+              Save Category
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <style>{`
         .category-form-overlay {
           position: fixed;
           top: 0;
@@ -272,8 +272,8 @@ const CategoryForm = ({ initialData, onSave, onCancel, type }) => {
           border-radius: 3px;
         }
       `}</style>
-        </div>
-    );
+    </div>
+  );
 };
 
 export default CategoryForm;

@@ -7,6 +7,7 @@ import Transactions from './Transactions';
 import { useLanguage } from '../context/LanguageContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { useCategories } from '../context/CategoriesContext';
+import { useAccounts } from '../context/AccountsContext';
 import { useTransactions } from '../context/TransactionsContext';
 import { useRecurringSeries } from '../hooks/useRecurringSeries';
 import { getCategoryIcon, getCategoryColor as getDefaultCategoryColor } from '../data/categoryOptions';
@@ -17,9 +18,16 @@ const Dashboard = () => {
   const { t, tCategory } = useLanguage();
   const { formatAmount } = useCurrency();
   const { transactions } = useTransactions();
+  const { accounts } = useAccounts(); // Get accounts
   const recurringSeries = useRecurringSeries();
 
+  // Calculate Total Balance from Accounts
+  const totalBalance = useMemo(() => {
+    return accounts.reduce((sum, acc) => sum + (parseFloat(acc.balance) || 0), 0);
+  }, [accounts]);
+
   const { upcomingItems, upcomingTotal, totalCount } = useMemo(() => {
+    // ... existing upcoming logic
     const today = new Date();
     const sixtyDaysFromNow = new Date(today);
     sixtyDaysFromNow.setDate(today.getDate() + 60);
@@ -27,7 +35,7 @@ const Dashboard = () => {
     const all = recurringSeries.filter(series => {
       if (!series.nextDueDate) return false;
       const dueDate = new Date(series.nextDueDate);
-      return series.active !== false && // Check explicit false if active exists, else assume true (removed strict check earlier, just rely on existing props)
+      return series.active !== false &&
         series.type === 'expense' &&
         dueDate >= today &&
         dueDate <= sixtyDaysFromNow;
@@ -42,38 +50,37 @@ const Dashboard = () => {
     return cat ? cat.color : getDefaultCategoryColor(name);
   };
 
+  const getCategoryIconByName = (name) => {
+    const cat = categories.find(c => c.name.toLowerCase() === (name || '').toLowerCase());
+    return getCategoryIcon(cat ? cat.icon_key : name);
+  };
+
   const summary = useMemo(() => {
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
 
-    return transactions.reduce((acc, tx) => {
+    // Calculate last month date correctly handling January
+    const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonth = lastMonthDate.getMonth();
+    const lastMonthYear = lastMonthDate.getFullYear();
+
+    const stats = transactions.reduce((acc, tx) => {
       const txDate = new Date(tx.date);
-      const isCurrentMonth = txDate.getMonth() === currentMonth && txDate.getFullYear() === currentYear;
-      const isPastOrToday = txDate <= now;
       const amount = Number(tx.amount);
 
-      // Total Balance (Current Realized Balance)
-      if (isPastOrToday) {
-        if (tx.type === 'income') {
-          acc.totalBalance += amount;
-        } else {
-          acc.totalBalance -= amount;
-        }
-      }
-
-      // Monthly Stats (Projected for the whole month)
-      if (isCurrentMonth) {
-        if (tx.type === 'income') {
-          acc.income += amount;
-        } else {
-          acc.expenses += amount;
-        }
+      if (txDate.getMonth() === currentMonth && txDate.getFullYear() === currentYear) {
+        if (tx.type === 'income') acc.income += amount;
+        else acc.expenses += amount;
       }
 
       return acc;
-    }, { totalBalance: 12500, income: 0, expenses: 0 });
+    }, { income: 0, expenses: 0 });
+
+    return stats;
   }, [transactions]);
+
+
 
   return (
     <div className="dashboard-container">
@@ -91,10 +98,7 @@ const Dashboard = () => {
                   <DollarSign size={20} />
                 </div>
               </div>
-              <div className="card-amount">{formatAmount(summary.totalBalance)}</div>
-              <div className="card-footer">
-                <span className="badge positive">+2.5%</span> <span className="text-muted">{t('common.vsLastMonth')}</span>
-              </div>
+              <div className="card-amount">{formatAmount(totalBalance)}</div>
             </div>
 
             <div className="card income-card">
@@ -146,7 +150,7 @@ const Dashboard = () => {
                   {upcomingItems.map(series => (
                     <div key={series.id} className="upcoming-item">
                       <div className="upcoming-icon" style={{ backgroundColor: getCategoryColor(series.category) }}>
-                        {React.createElement(getCategoryIcon(series.category) || DollarSign, { size: 24, color: "white" })}
+                        {React.createElement(getCategoryIconByName(series.category) || DollarSign, { size: 24, color: "white" })}
                       </div>
                       <div className="upcoming-info">
                         <div className="upcoming-main">{tCategory(series.category)}</div>
@@ -227,6 +231,56 @@ const Dashboard = () => {
         @media (max-width: 1200px) {
            .summary-cards-row {
               grid-template-columns: 1fr;
+           }
+        }
+        
+        @media (max-width: 768px) {
+
+           .summary-cards-row {
+              display: flex;
+              flex-wrap: wrap;
+              gap: 8px;
+           }
+           
+           .balance-card { 
+               width: 100%;
+               order: 3;
+           }
+           
+           .income-card, .expense-card {
+               flex: 1;
+               min-width: 0; /* crucial for flexbox */
+           }
+           
+           .income-card { order: 1; }
+           .expense-card { order: 2; }
+
+           /* Ultra Compact Mobile Cards */
+           .summary-cards-row .card {
+               padding: 12px;
+               gap: 8px;
+               min-height: 80px; /* Enforce shortness */
+               justify-content: center;
+           }
+
+           .summary-cards-row .card-header h3 {
+               font-size: 0.75rem;
+               margin: 0;
+           }
+
+           .summary-cards-row .card-amount {
+               font-size: 1.2rem;
+               line-height: 1.2;
+           }
+
+           .summary-cards-row .icon-wrapper {
+               width: 28px;
+               height: 28px;
+           }
+           
+           .summary-cards-row .icon-wrapper svg {
+               width: 16px;
+               height: 16px;
            }
         }
         
@@ -487,6 +541,13 @@ const Dashboard = () => {
         .badge.positive {
           background-color: rgba(76, 175, 80, 0.1);
           color: var(--color-success);
+          padding: 2px 8px;
+          border-radius: 4px;
+        }
+
+        .badge.negative {
+          background-color: rgba(239, 68, 68, 0.1);
+          color: var(--color-cancel);
           padding: 2px 8px;
           border-radius: 4px;
         }

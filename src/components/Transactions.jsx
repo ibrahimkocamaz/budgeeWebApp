@@ -21,6 +21,11 @@ const Transactions = ({ limit, showControls = true }) => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
 
+    const getCategoryIconByName = (name) => {
+        const cat = categories.find(c => c.name.toLowerCase() === (name || '').toLowerCase());
+        return getCategoryIcon(cat ? cat.icon_key : name);
+    };
+
     const [filter, setFilter] = useState('all'); // all, income, expense
     const [accountFilter, setAccountFilter] = useState(searchParams.get('account') || 'all');
     const [timeFilter, setTimeFilter] = useState('month'); // today, week, month, custom
@@ -458,7 +463,7 @@ const Transactions = ({ limit, showControls = true }) => {
                         <div className="group-items">
                             {transactions.map(tx => {
                                 const categoryObj = categoryMap[tx.category.toLowerCase()];
-                                const Icon = categoryObj ? getCategoryIcon(categoryObj.iconKey) : getCategoryIcon(tx.category);
+                                const Icon = categoryObj ? getCategoryIcon(categoryObj.icon_key) : getCategoryIcon(tx.category);
                                 const color = categoryObj ? categoryObj.color : getCategoryColor(tx.category);
                                 const isRecurring = tx.paymentType === 'installment' || tx.recurring === 1;
                                 const isEditing = editingId === tx.id;
@@ -639,7 +644,7 @@ const Transactions = ({ limit, showControls = true }) => {
                                 >
                                     {(() => {
                                         const cat = categoryMap[selectedTransaction.category.toLowerCase()];
-                                        const Icon = cat ? getCategoryIcon(cat.iconKey) : getCategoryIcon(selectedTransaction.category);
+                                        const Icon = cat ? getCategoryIcon(cat.icon_key) : getCategoryIcon(selectedTransaction.category);
                                         return <Icon size={32} color="white" />;
                                     })()}
                                 </div>

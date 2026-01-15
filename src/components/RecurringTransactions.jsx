@@ -26,6 +26,11 @@ const RecurringTransactions = () => {
         return cat ? cat.color : getDefaultCategoryColor(name);
     };
 
+    const getCategoryIconByName = (name) => {
+        const cat = categories.find(c => c.name.toLowerCase() === (name || '').toLowerCase());
+        return getCategoryIcon(cat ? cat.icon_key : name);
+    };
+
     const formatDate = (dateString, options = {}) => {
         if (!dateString) return '-';
         return new Date(dateString).toLocaleDateString(undefined, {
@@ -151,7 +156,7 @@ const RecurringTransactions = () => {
                                 <div key={series.id} className={`series-card ${series.isCompleted ? 'completed' : ''}`}>
                                     <div className="series-header">
                                         <div className="series-icon" style={{ backgroundColor: getCategoryColor(series.category) }}>
-                                            {React.createElement(getCategoryIcon(series.category), { size: 24, color: 'white' })}
+                                            {React.createElement(getCategoryIconByName(series.category), { size: 24, color: 'white' })}
                                         </div>
                                         <div className="series-info">
                                             <h3>{series.description}</h3>
@@ -258,7 +263,7 @@ const RecurringTransactions = () => {
                                             <span className="d-dow">{new Date(item.date).toLocaleDateString(undefined, { weekday: 'short' })}</span>
                                         </div>
                                         <div className="m-icon" style={{ backgroundColor: getCategoryColor(item.category) }}>
-                                            {React.createElement(getCategoryIcon(item.category), { size: 16, color: 'white' })}
+                                            {React.createElement(getCategoryIconByName(item.category), { size: 16, color: 'white' })}
                                         </div>
                                         <div className="m-info">
                                             <div className="m-desc">{item.description}</div>
