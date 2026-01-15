@@ -234,7 +234,7 @@ const Layout = ({ children }) => {
         .logo-text {
           font-size: 1.25rem;
           font-weight: 700;
-          color: var(--color-brand);
+          color: #0aac35;
           white-space: nowrap; /* Prevent wrap during transition */
         }
 
