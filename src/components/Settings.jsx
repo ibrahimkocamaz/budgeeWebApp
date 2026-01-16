@@ -6,7 +6,7 @@ import { useCurrency } from '../context/CurrencyContext';
 import { useAuth } from '../context/AuthContext';
 
 const Settings = () => {
-    const { t, language, changeLanguage } = useLanguage();
+    const { t, language, setLanguage } = useLanguage();
     const { isDark, toggleTheme } = useTheme();
     const { currency, setCurrency } = useCurrency();
     const { settings, updateSetting } = useSettings();
@@ -69,7 +69,7 @@ const Settings = () => {
                             <select
                                 className="settings-select"
                                 value={language}
-                                onChange={(e) => changeLanguage(e.target.value)}
+                                onChange={(e) => setLanguage(e.target.value)}
                             >
                                 <option value="en">English</option>
                                 <option value="es">Español</option>

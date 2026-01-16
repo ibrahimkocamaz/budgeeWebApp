@@ -71,6 +71,9 @@ export const translations = {
         },
         addTransaction: {
             title: "Add Transaction",
+            addAnother: "Add Another",
+            account: "Account",
+            category: "Category",
             expense: "Expense",
             income: "Income",
             amountLabel: "Amount",
@@ -265,6 +268,9 @@ export const translations = {
         },
         addTransaction: {
             title: "Añadir Transacción",
+            addAnother: "Añadir Otro",
+            account: "Cuenta",
+            category: "Categoría",
             expense: "Gasto",
             income: "Ingreso",
             amountLabel: "Cantidad",
@@ -280,7 +286,13 @@ export const translations = {
             single: "Única",
             recurring: "Recurrente",
             installment: "A Plazos",
-            frequency: "Frecuencia"
+            frequency: "Frecuencia",
+            count: 'Cantidad',
+            weekly: 'Semanal',
+            monthly: 'Mensual',
+            yearly: 'Anual',
+            unit: 'Precio Unitario',
+            total: 'Total Dividido'
         },
         currencies: {
             USD: "Dólar Estadounidense",
@@ -448,6 +460,9 @@ export const translations = {
         },
         addTransaction: {
             title: "Nova Transação",
+            addAnother: "Adicionar Outro",
+            account: "Conta",
+            category: "Categoria",
             expense: "Despesa",
             income: "Receita",
             amountLabel: "Valor",
@@ -463,7 +478,13 @@ export const translations = {
             single: "Única",
             recurring: "Recorrente",
             installment: "Parcelado",
-            frequency: "Frequência"
+            frequency: "Frequência",
+            count: 'Quantidade',
+            weekly: 'Semanal',
+            monthly: 'Mensal',
+            yearly: 'Anual',
+            unit: 'Preço Unitário',
+            total: 'Valor Total'
         },
         currencies: {
             USD: "Dólar Americano",
@@ -628,6 +649,9 @@ export const translations = {
         },
         addTransaction: {
             title: "İşlem Ekle",
+            addAnother: "Başka Ekle",
+            account: "Hesap",
+            category: "Kategori",
             expense: "Gider",
             income: "Gelir",
             amountLabel: "Tutar",

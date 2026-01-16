@@ -122,7 +122,7 @@ const Layout = ({ children }) => {
       </aside>
 
       {/* Main Content */}
-      <main className="main-content">
+      <main className="main-content" style={{ paddingBottom: location.pathname === '/add' ? 0 : undefined }}>
         {location.pathname !== '/add' && (
           <header className="top-bar">
             <h2 className="page-title">{getPageTitle(location.pathname)}</h2>
@@ -204,39 +204,41 @@ const Layout = ({ children }) => {
             </nav>
           </div>
         )}
-        <div className="content-scroll">
+        <div className={`content-scroll ${location.pathname === '/' ? 'dashboard-scroll' : ''}`}>
           {children}
         </div>
       </main >
 
-      {!mobileMenuOpen && (
+      {!mobileMenuOpen && location.pathname !== '/add' && (
         <Link to="/add" className="fab-add-transaction" title={t('dashboard.addTransaction')}>
           <Plus size={24} />
         </Link>
       )}
 
       {/* Bottom Navigation Bar - Mobile Only */}
-      <nav className="bottom-nav mobile-only-flex">
-        <Link to="/" className={`bottom-nav-item ${isActive('/') ? 'active' : ''}`}>
-          <Home size={24} />
-          <span>{t('sidebar.dashboard')}</span>
-        </Link>
-        <Link to="/transactions" className={`bottom-nav-item ${isActive('/transactions') ? 'active' : ''}`}>
-          <List size={24} />
-          <span>{t('sidebar.transactions')}</span>
-        </Link>
-        <div className="bottom-nav-spacer"></div>
-        {/* Middle Spacer for FAB */}
+      {location.pathname !== '/add' && (
+        <nav className="bottom-nav mobile-only-flex">
+          <Link to="/" className={`bottom-nav-item ${isActive('/') ? 'active' : ''}`}>
+            <Home size={24} />
+            <span>{t('sidebar.dashboard')}</span>
+          </Link>
+          <Link to="/transactions" className={`bottom-nav-item ${isActive('/transactions') ? 'active' : ''}`}>
+            <List size={24} />
+            <span>{t('sidebar.transactions')}</span>
+          </Link>
+          <div className="bottom-nav-spacer"></div>
+          {/* Middle Spacer for FAB */}
 
-        <Link to="/budgets" className={`bottom-nav-item ${isActive('/budgets') ? 'active' : ''}`}>
-          <PieChart size={24} />
-          <span>{t('sidebar.budgets')}</span>
-        </Link>
-        <Link to="/settings" className={`bottom-nav-item ${isActive('/settings') ? 'active' : ''}`}>
-          <Settings size={24} />
-          <span>{t('sidebar.settings') || 'Settings'}</span>
-        </Link>
-      </nav>
+          <Link to="/budgets" className={`bottom-nav-item ${isActive('/budgets') ? 'active' : ''}`}>
+            <PieChart size={24} />
+            <span>{t('sidebar.budgets')}</span>
+          </Link>
+          <Link to="/settings" className={`bottom-nav-item ${isActive('/settings') ? 'active' : ''}`}>
+            <Settings size={24} />
+            <span>{t('sidebar.settings') || 'Settings'}</span>
+          </Link>
+        </nav>
+      )}
 
       {showModal && <LanguageCurrencyModal onClose={() => setShowModal(false)} />}
 
@@ -507,7 +509,7 @@ const Layout = ({ children }) => {
             }
 
             .main-content {
-                padding-bottom: 80px; /* Space for bottom nav */
+                padding-bottom: 0;
             }
 
             .top-bar {
@@ -521,7 +523,11 @@ const Layout = ({ children }) => {
             }
 
             .content-scroll {
-                padding: 1rem; /* Less padding on mobile */
+                padding: 1rem;
+            }
+
+            .content-scroll.dashboard-scroll {
+                padding-bottom: 85px; /* Only for dashboard */
             }
             
             .content-scroll::-webkit-scrollbar {

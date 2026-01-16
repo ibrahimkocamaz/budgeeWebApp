@@ -708,7 +708,7 @@ const Transactions = ({ limit, showControls = true }) => {
                 .transactions-wrapper.full-page {
                     max-width: 100%;
                     margin: 0 auto;
-                    padding-bottom: 80px;
+                    padding-bottom: 50px;
                 }
 
                 .transactions-wrapper.widget-mode {
