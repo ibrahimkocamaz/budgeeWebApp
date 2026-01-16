@@ -13,7 +13,24 @@ const SpendingChart = () => {
     const { transactions } = useTransactions();
 
     const spendingData = useMemo(() => {
-        const expenses = transactions.filter(t => t.type === 'expense');
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+
+        const expenses = transactions.filter(t => {
+            if (t.type !== 'expense') return false;
+
+            // Safer comparison using string splitting to avoid timezone shifts
+            if (typeof t.date === 'string') {
+                const [year, month] = t.date.split('-');
+                // month is 01-12, currentMonth is 0-11
+                return (parseInt(month) - 1) === currentMonth && parseInt(year) === currentYear;
+            }
+
+            // Fallback if it's already a Date object
+            const tDate = new Date(t.date);
+            return tDate.getMonth() === currentMonth && tDate.getFullYear() === currentYear;
+        });
 
         // Fast lookup map for category details
         const catLookup = categories.reduce((acc, c) => {

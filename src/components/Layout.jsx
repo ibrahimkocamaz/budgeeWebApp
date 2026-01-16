@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
-import { Home, List, PieChart, Settings, LogOut, Wallet, Tags, Repeat, Plus, Globe, Moon, Sun, ChevronLeft, ChevronRight, Menu, X } from 'lucide-react';
+import { Home, List, PieChart, Settings, LogOut, Wallet, Tags, Repeat, Plus, Globe, Moon, Sun, ChevronLeft, ChevronRight, Menu, X, Search } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import LanguageCurrencyModal from './LanguageCurrencyModal';
 
 import { useAuth } from '../context/AuthContext';
+import { useTransactions } from '../context/TransactionsContext';
 
 const Layout = ({ children }) => {
   const location = useLocation();
   const { t } = useLanguage();
   const { isDark, toggleTheme } = useTheme();
   const { signOut, user } = useAuth(); // Get signOut and user
+  const { searchTerm, setSearchTerm } = useTransactions();
   const isActive = (path) => location.pathname === path;
   const [showModal, setShowModal] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -125,6 +127,19 @@ const Layout = ({ children }) => {
           <header className="top-bar">
             <h2 className="page-title">{getPageTitle(location.pathname)}</h2>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+
+              {location.pathname === '/transactions' && (
+                <div className="header-search-bar">
+                  <Search size={18} />
+                  <input
+                    type="text"
+                    placeholder={t('common.searchPlaceholder') || 'Search'}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+              )}
+
               <div className="header-actions desktop-only">
                 <button
                   className="icon-btn"
@@ -610,6 +625,55 @@ const Layout = ({ children }) => {
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header-search-bar {
+            background-color: var(--bg-card);
+            border: 1px solid var(--color-input-border); /* Use input border color */
+            border-radius: 8px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+            width: 220px;
+            transition: all 0.2s;
+        }
+
+        .header-search-bar input {
+            background: none;
+            border: none;
+            color: var(--text-main);
+            width: 100%;
+            outline: none;
+            font-size: 0.9rem;
+        }
+        
+        .header-search-bar:focus-within {
+             border-color: var(--color-brand);
+        }
+
+        @media (max-width: 768px) {
+            .header-search-bar {
+                width: 130px; /* Constrain width on mobile */
+                padding: 6px 8px;
+            }
+            .header-search-bar input {
+                font-size: 0.85rem;
+            }
+            .header-search-bar:focus-within {
+                width: 160px; /* Expand slightly */
+            }
+            
+            /* Ensure title doesn't overflow */
+             .page-title {
+                 flex: 1;
+                 min-width: 0;
+                 white-space: nowrap;
+                 overflow: hidden;
+                 text-overflow: ellipsis;
+                 font-size: 1.1rem;
+             }
         }
       `}</style>
     </div >

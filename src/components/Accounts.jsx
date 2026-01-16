@@ -407,6 +407,13 @@ const Accounts = () => {
                     transform: translateY(0);
                 }
 
+                @media (max-width: 768px) {
+                    .card-actions {
+                        opacity: 1 !important;
+                        transform: translateY(0) !important;
+                    }
+                }
+
                 .action-btn {
                     background: rgba(255, 255, 255, 0.1);
                     border: none;

@@ -15,7 +15,7 @@ const Transactions = ({ limit, showControls = true }) => {
     const { t, tCategory, language } = useLanguage();
     const { formatAmount } = useCurrency();
     const { settings } = useSettings();
-    const { transactions: allTransactions, deleteTransaction, updateTransaction } = useTransactions();
+    const { transactions: allTransactions, deleteTransaction, updateTransaction, searchTerm } = useTransactions();
     const { getCategoriesByType, categories } = useCategories();
     const { accounts } = useAccounts();
     const navigate = useNavigate();
@@ -32,7 +32,7 @@ const Transactions = ({ limit, showControls = true }) => {
     const [customDateRange, setCustomDateRange] = useState({ start: '', end: '' });
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [categoryFilter, setCategoryFilter] = useState(null);
-    const [searchTerm, setSearchTerm] = useState('');
+    // const [searchTerm, setSearchTerm] = useState(''); // Removed local state
     const [selectedDate, setSelectedDate] = useState(new Date());
 
     const goToPreviousMonth = () => {
@@ -317,17 +317,7 @@ const Transactions = ({ limit, showControls = true }) => {
                             </div>
                         </div>
 
-                        <div className="actions">
-                            <div className="search-bar">
-                                <Search size={18} />
-                                <input
-                                    type="text"
-                                    placeholder={t('common.searchPlaceholder')}
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                />
-                            </div>
-                        </div>
+
                     </div>
 
 
@@ -798,6 +788,56 @@ const Transactions = ({ limit, showControls = true }) => {
 
                 .summary-card.income .card-value { color: var(--color-success); }
                 .summary-card.expense .card-value { color: var(--color-accent-red); }
+
+                @media (max-width: 768px) {
+                    .page-header {
+                        flex-direction: column;
+                        align-items: stretch;
+                        gap: 16px;
+                    }
+                    
+                    .summary-cards {
+                        display: flex;
+                        flex-direction: row;
+                        justify-content: space-between;
+                        gap: 8px;
+                        width: 100%;
+                        order: 2;
+                    }
+
+                    .summary-card {
+                        flex: 1;
+                        flex-direction: column;
+                        justify-content: center;
+                        align-items: center;
+                        text-align: center;
+                        min-width: 0 !important; /* Force override of global min-width */
+                        padding: 10px 4px;
+                        height: auto;
+                    }
+
+                    .summary-card .card-label {
+                        font-size: 0.7rem;
+                        white-space: nowrap;
+                    }
+                    
+                    .summary-card .card-value {
+                        font-size: 0.9rem;
+                        line-height: 1.2;
+                    }
+
+                    .summary-card.balance {
+                        /* grid-column properties no longer apply in flex, flex: 1 handles it */
+                    }
+                    
+                    .actions {
+                        width: 100%;
+                        order: 1;
+                    }
+                    .search-bar {
+                        width: 100%;
+                    }
+                }
                 .summary-card.balance .card-value.pos { color: var(--color-brand); }
                 .summary-card.balance .card-value.neg { color: var(--text-main); }
 
@@ -830,6 +870,35 @@ const Transactions = ({ limit, showControls = true }) => {
                     overflow: visible;
                     padding-bottom: 4px;
                     align-items: center;
+                }
+
+                @media (max-width: 768px) {
+                    .time-filters {
+                        gap: 8px;
+                    }
+                    .month-navigator {
+                        width: 100%;
+                        justify-content: space-between;
+                        margin-bottom: 4px;
+                    }
+                    .current-month-label {
+                        flex: 1; /* Make label take available space */
+                    }
+                    /* Ensure other items fit on the second row */
+                    .time-btn, .custom-date-wrapper, .filter-select {
+                        flex: 1; /* Grow to fill space */
+                        justify-content: center;
+                        min-width: 80px; /* Minimum width to stay readable */
+                    }
+                    .filter-divider {
+                        display: none; /* Hide divider on mobile if wrapping */
+                    }
+                    
+                    /* Account filter specifically might need more width or just fit in */
+                    .filter-select {
+                        width: auto;
+                        min-width: 100px;
+                    }
                 }
 
                 .custom-date-wrapper {

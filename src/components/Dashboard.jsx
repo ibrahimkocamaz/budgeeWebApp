@@ -142,7 +142,7 @@ const Dashboard = () => {
                   <h2>{t('dashboard.upcomingRecurring')}</h2>
                   <span className="header-total">({formatAmount(upcomingTotal)})</span>
                 </div>
-                <Link to="/recurring" className="btn-link">{t('dashboard.viewAllRecurring') || 'View All'}</Link>
+                <Link to="/recurring" className="btn-link">{t('dashboard.viewAll')}</Link>
               </div>
 
               {upcomingItems.length > 0 ? (

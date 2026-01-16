@@ -12,6 +12,7 @@ export const TransactionsProvider = ({ children }) => {
     const { user } = useAuth();
     const { accounts, updateAccount } = useAccounts();
     const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
         if (user) {
@@ -239,7 +240,10 @@ export const TransactionsProvider = ({ children }) => {
             updateTransaction,
             deleteTransaction,
             deleteTransactions,
-            updateTransactions
+            deleteTransactions,
+            updateTransactions,
+            searchTerm,
+            setSearchTerm
         }}>
             {children}
         </TransactionsContext.Provider>
