@@ -231,8 +231,45 @@ const Login = () => {
 
     return (
         <div style={styles.page}>
+            <style>
+                {`
+                    @media (max-width: 768px) {
+                        .brand-section {
+                            display: none !important;
+                        }
+                        .right-section {
+                            flex: 1 !important;
+                            padding: 0 !important;
+                            display: flex !important;
+                            flex-direction: column !important; /* Stack header and card */
+                            align-items: center !important;
+                            justify-content: flex-end !important; /* Push card to bottom */
+                            background: linear-gradient(135deg, #b2f0c4ff 0%, #e1fee9 100%) !important; /* Mint background */
+                        }
+                        .login-card {
+                            max-width: 100% !important;
+                            width: 100% !important;
+                            padding: 2.5rem 1.5rem !important;
+                            background-color: #12151A !important;
+                            border-radius: 32px 32px 0 0 !important; /* Rounded top only */
+                            box-shadow: 0 -10px 40px rgba(0,0,0,0.2) !important;
+                        }
+                        .welcome-title, .welcome-subtitle {
+                            display: none !important;
+                        }
+                        .mobile-header {
+                            display: flex !important;
+                            flex-direction: column !important;
+                            align-items: center !important;
+                            gap: 1rem;
+                            margin-top: auto !important; /* Center vertically on screen space */
+                            margin-bottom: auto !important;
+                        }
+                    }
+                `}
+            </style>
             {/* Left Side - Branding */}
-            <div style={styles.brandSection}>
+            <div className="brand-section" style={styles.brandSection}>
                 <div style={styles.logoContainer}>
                     <img src="/assets/budgee_icon.png" alt="Budgee Logo" style={styles.logoIcon} />
                     <span style={styles.brandName}>Budgee</span>
@@ -246,10 +283,17 @@ const Login = () => {
             </div>
 
             {/* Right Side - Dark Floating Card */}
-            <div style={styles.rightSection}>
-                <div style={styles.loginCard}>
-                    <h2 style={styles.title}>Welcome back</h2>
-                    <p style={styles.subtitle}>Enter your details to access your account.</p>
+            <div className="right-section" style={styles.rightSection}>
+                {/* Mobile Only Header - Outside Modal */}
+                <div className="mobile-header" style={{ display: 'none' }}>
+                    <img src="/assets/budgee_icon.png" alt="Budgee" style={{ width: '64px', height: '64px', objectFit: 'contain' }} />
+                    <span style={{ fontSize: '2rem', fontWeight: 'bold', color: '#0aac35' }}>Budgee</span>
+                </div>
+
+                <div className="login-card" style={styles.loginCard}>
+
+                    <h2 className="welcome-title" style={styles.title}>Welcome back</h2>
+                    <p className="welcome-subtitle" style={styles.subtitle}>Enter your details to access your account.</p>
 
                     {error && <div style={styles.error}>{error}</div>}
                     {message && <div style={styles.success}>{message}</div>}

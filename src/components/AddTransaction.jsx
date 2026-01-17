@@ -362,9 +362,13 @@ const AddTransaction = () => {
                           <input
                             type="number"
                             value={tx.recurringCount}
-                            onChange={(e) => handleChange(tx.id, 'recurringCount', e.target.value)}
+                            onChange={(e) => {
+                              const val = Math.min(99, Math.max(1, parseInt(e.target.value) || 1));
+                              handleChange(tx.id, 'recurringCount', val);
+                            }}
                             className="rec-count full-width"
                             min="1"
+                            max="99"
                           />
                         </div>
                       </div>

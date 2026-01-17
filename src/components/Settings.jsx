@@ -1,4 +1,4 @@
-import { Lock, ChevronRight, Moon, Globe, DollarSign, User } from 'lucide-react';
+import { Lock, ChevronRight, Moon, Globe, DollarSign, User, LogOut } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useSettings } from '../context/SettingsContext';
 import { useTheme } from '../context/ThemeContext';
@@ -10,7 +10,15 @@ const Settings = () => {
     const { isDark, toggleTheme } = useTheme();
     const { currency, setCurrency } = useCurrency();
     const { settings, updateSetting } = useSettings();
-    const { user } = useAuth();
+    const { user, signOut } = useAuth();
+
+    const handleLogout = async () => {
+        try {
+            await signOut();
+        } catch (error) {
+            console.error('Error signing out:', error);
+        }
+    };
 
     return (
         <div className="settings-container">
@@ -146,11 +154,29 @@ const Settings = () => {
                 </div>
             </section>
 
+            {/* Logout Section - Mobile Only */}
+            <section className="settings-section mobile-only-section">
+                <div className="settings-card logout-card" onClick={handleLogout} style={{ cursor: 'pointer' }}>
+                    <div className="settings-item">
+                        <div className="item-left">
+                            <div className="icon-circle logout-icon">
+                                <LogOut size={20} />
+                            </div>
+                            <span className="logout-text">{t('sidebar.logout') || 'Logout'}</span>
+                        </div>
+                        <div className="item-right">
+                            <ChevronRight size={18} className="arrow-icon logout-arrow" />
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <style>{`
                 .settings-container {
                     max-width: 100%;
                     margin: 0 auto;
                     color: var(--text-main);
+                    padding-bottom: 2rem;
                 }
 
                 .settings-title {
@@ -358,6 +384,25 @@ const Settings = () => {
                     opacity: 0.9;
                     margin: 0;
                 }
+
+                .logout-card:active {
+                    opacity: 0.8;
+                }
+
+                .logout-text {
+                    color: var(--color-cancel);
+                    font-weight: 600;
+                }
+
+                .logout-icon {
+                    color: var(--color-cancel);
+                    background-color: rgba(229, 57, 53, 0.1);
+                }
+
+                .logout-arrow {
+                    color: var(--color-cancel);
+                }
+
             `}</style>
         </div>
     );
