@@ -653,12 +653,30 @@ const AddTransaction = () => {
 
                 .select-wrapper select {
                     width: 100%;
-                    background: none;
+                    background: transparent;
                     border: none;
                     color: var(--text-main);
                     font-size: 0.95rem;
                     outline: none;
-                    appearance: none; 
+                    appearance: none;
+                    cursor: pointer;
+                    position: relative;
+                    z-index: 1;
+                }
+
+                .select-wrapper {
+                    position: relative;
+                }
+
+                .select-wrapper::after {
+                    content: '▼';
+                    position: absolute;
+                    right: 12px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    font-size: 0.6rem;
+                    color: var(--text-muted);
+                    pointer-events: none;
                 }
 
                 /* Secondary */

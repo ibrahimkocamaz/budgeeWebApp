@@ -61,6 +61,12 @@
   /* Keeping brand colors same for consistency unless requested otherwise */
 }
 
+/* Force dropdown options to be readable with black text on white background */
+select option {
+  background-color: #ffffff;
+  color: #000000;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
