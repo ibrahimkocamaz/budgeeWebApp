@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Save, Plus, Trash2, TrendingUp, TrendingDown, CircleDot, Repeat, CalendarRange, ChevronLeft, ChevronRight, Wallet, Tags } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
@@ -15,6 +15,14 @@ const AddTransaction = () => {
   const { addTransaction } = useTransactions();
   const { accounts, updateAccount } = useAccounts();
   const { currencySymbol } = useCurrency();
+  const firstAmountRef = useRef(null);
+
+  // Focus on mobile
+  useEffect(() => {
+    if (window.innerWidth <= 768 && firstAmountRef.current) {
+      firstAmountRef.current.focus();
+    }
+  }, []);
 
   // Memoize categories to avoid re-fetching on every render if possible, 
   // but context provided functions usually return array.
@@ -281,6 +289,7 @@ const AddTransaction = () => {
                       required
                       min="0.01"
                       autoFocus={index === transactions.length - 1 && index > 0}
+                      ref={index === 0 ? firstAmountRef : null}
                     />
                   </div>
                 </div>
