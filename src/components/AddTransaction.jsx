@@ -56,6 +56,8 @@ const AddTransaction = () => {
     }
   ]);
   const [activeModeRowId, setActiveModeRowId] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const isSubmitting = useRef(false);
 
   const handleAddRow = () => {
     setTransactions([
@@ -99,6 +101,10 @@ const AddTransaction = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting.current) return;
+
+    isSubmitting.current = true;
+    setIsSaving(true);
     console.log("Submitting Batch Transactions:", transactions);
 
     const promises = [];
@@ -153,6 +159,8 @@ const AddTransaction = () => {
       if (errors.length > 0) {
         console.error(errors);
         alert(`Error saving transactions: ${errors[0].message}`);
+        setIsSaving(false);
+        isSubmitting.current = false;
         return; // Don't navigate if error
       }
 
@@ -165,6 +173,8 @@ const AddTransaction = () => {
     } catch (err) {
       console.error(err);
       alert('Unexpected error saving transactions');
+      setIsSaving(false);
+      isSubmitting.current = false;
     }
   };
 
@@ -433,9 +443,13 @@ const AddTransaction = () => {
               {getTotalAmount() >= 0 ? '+' : ''}{getTotalAmount().toFixed(2)}
             </span>
           </div>
-          <button type="submit" className="submit-btn-large">
+          <button
+            type="submit"
+            className={`submit-btn-large ${isSaving ? 'disabled' : ''}`}
+            disabled={isSaving}
+          >
             <Save size={20} />
-            {t('addTransaction.save')} {transactions.length} Item{transactions.length !== 1 ? 's' : ''}
+            {isSaving ? t('addTransaction.saving') : `${t('addTransaction.save')} ${transactions.length} Item${transactions.length !== 1 ? 's' : ''}`}
           </button>
         </div>
       </form>
