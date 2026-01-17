@@ -50,7 +50,7 @@ const AddTransaction = () => {
       title: '',
       amount: '',
       merchant: '',
-      recurringCount: 1,
+      recurringCount: 2,
       recurringFrequency: 'monthly',
       recurringPricingMode: 'unit'
     }
@@ -72,7 +72,7 @@ const AddTransaction = () => {
         title: '',
         amount: '',
         merchant: '',
-        recurringCount: 1,
+        recurringCount: 2,
         recurringFrequency: 'monthly',
         recurringPricingMode: 'unit'
       }
@@ -385,11 +385,12 @@ const AddTransaction = () => {
                             type="number"
                             value={tx.recurringCount}
                             onChange={(e) => {
-                              const val = Math.min(99, Math.max(1, parseInt(e.target.value) || 1));
+                              let val = e.target.value;
+                              if (val !== '' && parseInt(val) > 99) val = 99;
                               handleChange(tx.id, 'recurringCount', val);
                             }}
                             className="rec-count full-width"
-                            min="1"
+                            min="2"
                             max="99"
                           />
                         </div>

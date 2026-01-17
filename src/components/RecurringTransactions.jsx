@@ -299,7 +299,6 @@ const RecurringTransactions = () => {
                 .recurring-container {
                     max-width: 100%;
                     margin: 0 auto;
-                    padding-bottom: 2rem;
                 }
 
                 .recurring-page-layout {

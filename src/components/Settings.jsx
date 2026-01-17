@@ -273,7 +273,6 @@ const Settings = () => {
                     max-width: 100%;
                     margin: 0 auto;
                     color: var(--text-main);
-                    padding-bottom: 2rem;
                 }
 
                 .settings-title {
@@ -283,6 +282,10 @@ const Settings = () => {
 
                 .settings-section {
                     margin-bottom: 2rem;
+                }
+
+                .settings-section:last-of-type {
+                    margin-bottom: 0;
                 }
 
                 .section-title {

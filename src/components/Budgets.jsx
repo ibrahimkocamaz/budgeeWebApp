@@ -321,7 +321,6 @@ const Budgets = ({ limit, simpleMode = false }) => {
                 .budgets-container {
                     max-width: 100%;
                     margin: 0 auto;
-                    padding-bottom: 80px;
                 }
 
                 .budgets-container.widget-mode {

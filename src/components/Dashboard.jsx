@@ -239,7 +239,6 @@ const Dashboard = () => {
            .summary-cards-row {
               display: flex;
               flex-wrap: wrap;
-              gap: 8px;
            }
            
            .balance-card { 
@@ -311,16 +310,17 @@ const Dashboard = () => {
           background-color: var(--bg-card);
           border-radius: 1rem;
           border: 1px solid var(--color-divider);
-          padding: 1.5rem;
           display: flex;
           flex-direction: column;
+          overflow: hidden;
         }
 
         .widget-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1rem;
+            padding: 1.5rem;
+            padding-bottom: 0.5rem;
         }
 
         .widget-header h2 {
@@ -343,12 +343,9 @@ const Dashboard = () => {
         .upcoming-list {
             display: flex;
             flex-direction: column;
-            background-color: var(--bg-card);
-            border-radius: 12px;
-            border: 1px solid var(--color-divider);
-            overflow: hidden;
+            /* Removed card styles from inner list */
         }
-
+        
         .upcoming-item {
             display: flex;
             align-items: center;

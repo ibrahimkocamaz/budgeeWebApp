@@ -171,7 +171,11 @@ const Transactions = ({ limit, showControls = true }) => {
             const matchesCategory = categoryFilter ? tx.category === categoryFilter : true;
             const matchesAccount = accountFilter === 'all' || tx.accountId === accountFilter;
             return matchesType && matchesCategory && matchesAccount;
-        }).sort((a, b) => new Date(b.date) - new Date(a.date));
+        }).sort((a, b) => {
+            const dateDiff = new Date(b.date) - new Date(a.date);
+            if (dateDiff !== 0) return dateDiff;
+            return new Date(b.created_at) - new Date(a.created_at);
+        });
 
         if (limit) {
             transactions = transactions.slice(0, limit);
@@ -708,7 +712,6 @@ const Transactions = ({ limit, showControls = true }) => {
                 .transactions-wrapper.full-page {
                     max-width: 100%;
                     margin: 0 auto;
-                    padding-bottom: 50px;
                 }
 
                 .transactions-wrapper.widget-mode {
@@ -817,12 +820,12 @@ const Transactions = ({ limit, showControls = true }) => {
                     }
 
                     .summary-card .card-label {
-                        font-size: 0.7rem;
+                        font-size: 0.8rem;
                         white-space: nowrap;
                     }
                     
                     .summary-card .card-value {
-                        font-size: 0.9rem;
+                        font-size: 1.2rem;
                         line-height: 1.2;
                     }
 
@@ -1100,6 +1103,10 @@ const Transactions = ({ limit, showControls = true }) => {
 
                 .date-group {
                     margin-bottom: 24px;
+                }
+
+                .date-group:last-child {
+                    margin-bottom: 0;
                 }
 
                 .date-header {

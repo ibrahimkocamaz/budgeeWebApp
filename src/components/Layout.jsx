@@ -524,10 +524,7 @@ const Layout = ({ children }) => {
 
             .content-scroll {
                 padding: 1rem;
-            }
-
-            .content-scroll.dashboard-scroll {
-                padding-bottom: 85px; /* Only for dashboard */
+                padding-bottom: 5em; /* Unified mobile padding */
             }
             
             .content-scroll::-webkit-scrollbar {
