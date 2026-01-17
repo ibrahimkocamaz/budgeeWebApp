@@ -135,6 +135,11 @@ export const AccountsProvider = ({ children }) => {
 
     const deleteAccount = async (id) => {
         try {
+            if (accounts.length <= 1) {
+                console.warn('Cannot delete the only account');
+                return { error: 'Cannot delete the only account' };
+            }
+
             const { error } = await supabase
                 .from('accounts')
                 .delete()
@@ -142,6 +147,7 @@ export const AccountsProvider = ({ children }) => {
 
             if (error) throw error;
             setAccounts(prev => prev.filter(acc => acc.id !== id));
+            return { error: null };
         } catch (error) {
             console.error('Error deleting account:', error.message);
         }

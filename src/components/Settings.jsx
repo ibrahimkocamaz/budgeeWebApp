@@ -1,22 +1,49 @@
-import { Lock, ChevronRight, Moon, Globe, DollarSign, User, LogOut } from 'lucide-react';
+import { Lock, ChevronRight, Moon, Globe, DollarSign, User, LogOut, Trash2, AlertTriangle } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useSettings } from '../context/SettingsContext';
 import { useTheme } from '../context/ThemeContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { useAuth } from '../context/AuthContext';
+import React, { useState } from 'react';
+import ConfirmationModal from './ConfirmationModal';
 
 const Settings = () => {
     const { t, language, setLanguage } = useLanguage();
     const { isDark, toggleTheme } = useTheme();
     const { currency, setCurrency } = useCurrency();
-    const { settings, updateSetting } = useSettings();
+    const { settings, updateSetting, deleteAllData } = useSettings();
     const { user, signOut } = useAuth();
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const handleLogout = async () => {
         try {
             await signOut();
         } catch (error) {
             console.error('Error signing out:', error);
+        }
+    };
+
+    const handleDeleteAllData = async () => {
+        if (deleteConfirmationText !== 'DELETE') return;
+
+        try {
+            setIsDeleting(true);
+            const { success, error } = await deleteAllData(user.id);
+            if (success) {
+                // Refresh the app to trigger default seeding and clear states
+                window.location.reload();
+            } else {
+                alert(error || 'Failed to delete data');
+            }
+        } catch (error) {
+            console.error('Error in handleDeleteAllData:', error);
+            alert('An unexpected error occurred');
+        } finally {
+            setIsDeleting(false);
+            setIsDeleteModalOpen(false);
+            setDeleteConfirmationText('');
         }
     };
 
@@ -170,6 +197,76 @@ const Settings = () => {
                     </div>
                 </div>
             </section>
+
+            {/* Danger Zone Section */}
+            <section className="settings-section">
+                <h3 className="section-title danger-title">{t('settings.dangerZone') || 'Danger Zone'}</h3>
+                <div className="settings-card danger-card">
+                    <div className="settings-item clickable" onClick={() => setIsDeleteModalOpen(true)}>
+                        <div className="item-left">
+                            <div className="icon-circle danger-icon">
+                                <Trash2 size={20} />
+                            </div>
+                            <div className="danger-text-group">
+                                <span className="danger-text">{t('settings.deleteAllData') || 'Delete All Data'}</span>
+                                <span className="danger-subtext">{t('settings.deleteAllDataDesc') || 'Permanently delete all your records'}</span>
+                            </div>
+                        </div>
+                        <div className="item-right">
+                            <ChevronRight size={18} className="arrow-icon danger-arrow" />
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Delete Confirmation Modal */}
+            {isDeleteModalOpen && (
+                <div className="modal-overlay" onClick={() => !isDeleting && setIsDeleteModalOpen(false)}>
+                    <div className="modal-content delete-modal" onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <div className="icon-badge danger">
+                                <AlertTriangle size={24} />
+                            </div>
+                            <h3 className="modal-title">{t('settings.deleteConfirmTitle') || 'Are you absolutely sure?'}</h3>
+                        </div>
+
+                        <div className="modal-body">
+                            <p className="warning-text">
+                                {t('settings.deleteWarning') || 'This action cannot be undone. This will permanently delete your transactions, accounts, budgets, and categories.'}
+                            </p>
+                            <p className="instruction-text">
+                                {t('settings.deleteInstruction') || 'Please type "DELETE" to confirm:'}
+                            </p>
+                            <input
+                                type="text"
+                                className="confirmation-input"
+                                value={deleteConfirmationText}
+                                onChange={(e) => setDeleteConfirmationText(e.target.value)}
+                                placeholder="DELETE"
+                                disabled={isDeleting}
+                                autoFocus
+                            />
+                        </div>
+
+                        <div className="modal-actions">
+                            <button
+                                className="modal-btn secondary"
+                                onClick={() => setIsDeleteModalOpen(false)}
+                                disabled={isDeleting}
+                            >
+                                {t('common.cancel') || 'Cancel'}
+                            </button>
+                            <button
+                                className="modal-btn primary danger"
+                                onClick={handleDeleteAllData}
+                                disabled={deleteConfirmationText !== 'DELETE' || isDeleting}
+                            >
+                                {isDeleting ? (t('common.deleting') || 'Deleting...') : (t('settings.confirmDelete') || 'Delete Everything')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <style>{`
                 .settings-container {
@@ -401,6 +498,184 @@ const Settings = () => {
 
                 .logout-arrow {
                     color: var(--color-cancel);
+                }
+
+                /* Danger Zone Styles */
+                .danger-title {
+                    color: var(--color-cancel);
+                }
+
+                .danger-card {
+                    border-color: rgba(229, 57, 53, 0.2);
+                }
+
+                .danger-icon {
+                    color: var(--color-cancel);
+                    background-color: rgba(229, 57, 53, 0.1);
+                }
+
+                .danger-text-group {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 2px;
+                }
+
+                .danger-text {
+                    color: var(--color-cancel);
+                    font-weight: 600;
+                }
+
+                .danger-subtext {
+                    font-size: 0.75rem;
+                    color: var(--text-muted);
+                    font-weight: 400;
+                }
+
+                .danger-arrow {
+                    color: var(--color-cancel);
+                    opacity: 0.7;
+                }
+
+                /* Custom Delete Modal */
+                .delete-modal {
+                    max-width: 440px;
+                    text-align: center;
+                    padding: 2rem;
+                }
+
+                .warning-text {
+                    color: var(--text-main);
+                    font-weight: 500;
+                    margin-bottom: 1.5rem;
+                    line-height: 1.5;
+                }
+
+                .instruction-text {
+                    font-size: 0.9rem;
+                    color: var(--text-muted);
+                    margin-bottom: 0.75rem;
+                }
+
+                .confirmation-input {
+                    width: 100%;
+                    padding: 12px;
+                    border-radius: 8px;
+                    border: 1px solid var(--color-divider);
+                    background-color: var(--bg-app);
+                    color: var(--text-main);
+                    font-size: 1rem;
+                    font-weight: 700;
+                    text-align: center;
+                    letter-spacing: 2px;
+                    margin-bottom: 1.5rem;
+                    outline: none;
+                    transition: border-color 0.2s;
+                }
+
+                .confirmation-input:focus {
+                    border-color: var(--color-cancel);
+                }
+
+                .modal-actions {
+                    display: flex;
+                    gap: 12px;
+                    justify-content: center;
+                }
+
+                .modal-btn {
+                    flex: 1;
+                    padding: 12px 16px;
+                    border-radius: 10px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    font-size: 0.95rem;
+                    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                    border: none;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                .modal-btn:active {
+                    transform: scale(0.98);
+                }
+
+                .modal-btn.secondary {
+                    background-color: transparent;
+                    border: 1px solid var(--color-divider);
+                    color: var(--text-main);
+                }
+
+                .modal-btn.secondary:hover {
+                    background-color: rgba(255, 255, 255, 0.05);
+                    border-color: var(--text-muted);
+                }
+
+                .modal-btn.danger {
+                    background-color: var(--color-cancel);
+                    color: white;
+                    box-shadow: 0 4px 12px rgba(229, 57, 53, 0.2);
+                }
+
+                .modal-btn.danger:hover:not(:disabled) {
+                    background-color: #d32f2f;
+                    box-shadow: 0 6px 16px rgba(229, 57, 53, 0.3);
+                }
+
+                .modal-btn:disabled {
+                    opacity: 0.5;
+                    cursor: not-allowed;
+                    box-shadow: none;
+                }
+
+                .icon-badge.danger {
+                    background-color: rgba(229, 57, 53, 0.1);
+                    color: var(--color-cancel);
+                    width: 48px;
+                    height: 48px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin: 0 auto 1rem auto;
+                }
+
+                .modal-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background-color: rgba(0, 0, 0, 0.5);
+                    backdrop-filter: blur(4px);
+                    z-index: 1100;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    animation: fadeIn 0.2s ease-out;
+                    padding: 20px;
+                }
+
+                .modal-content {
+                    background-color: var(--bg-card);
+                    width: 100%;
+                    max-width: 400px;
+                    border-radius: 16px;
+                    padding: 24px;
+                    position: relative;
+                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+                    animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                    border: 1px solid var(--color-divider);
+                }
+
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+
+                @keyframes scaleUp {
+                    from { transform: scale(0.95); opacity: 0; }
+                    to { transform: scale(1); opacity: 1; }
                 }
 
             `}</style>

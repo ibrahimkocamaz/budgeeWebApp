@@ -188,13 +188,15 @@ const Accounts = () => {
                                             >
                                                 <Pencil size={16} />
                                             </button>
-                                            <button
-                                                className="action-btn delete"
-                                                onClick={(e) => openDeleteModal(account, e)}
-                                                title={t('common.delete') || 'Delete Account'}
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
+                                            {accounts.length > 1 && (
+                                                <button
+                                                    className="action-btn delete"
+                                                    onClick={(e) => openDeleteModal(account, e)}
+                                                    title={t('common.delete') || 'Delete Account'}
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
 

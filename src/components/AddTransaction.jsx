@@ -278,6 +278,8 @@ const AddTransaction = () => {
                       onChange={(e) => handleChange(tx.id, 'amount', e.target.value)}
                       className="hero-input"
                       step="0.01"
+                      required
+                      min="0.01"
                       autoFocus={index === transactions.length - 1 && index > 0}
                     />
                   </div>
@@ -308,6 +310,7 @@ const AddTransaction = () => {
                     <select
                       value={tx.category}
                       onChange={(e) => handleChange(tx.id, 'category', e.target.value)}
+                      required
                     >
                       <option value="" disabled>{t('addTransaction.selectCategory')}</option>
                       {(tx.type === 'expense' ? expenseCategories : incomeCategories).map(cat => (

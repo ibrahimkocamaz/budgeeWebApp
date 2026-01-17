@@ -35,7 +35,14 @@ export const translations = {
             security: "Security",
             changePassword: "Change Password",
             general: "General",
-            startOfWeek: "Start of Week"
+            startOfWeek: "Start of Week",
+            dangerZone: "Danger Zone",
+            deleteAllData: "Delete All Data",
+            deleteAllDataDesc: "Permanently delete all your records",
+            deleteConfirmTitle: "Are you absolutely sure?",
+            deleteWarning: "This action cannot be undone. This will permanently delete your transactions, accounts, budgets, and categories.",
+            deleteInstruction: 'Please type "DELETE" to confirm:',
+            confirmDelete: "Delete Everything"
         },
         days: {
             sunday: "Sunday",
@@ -123,7 +130,8 @@ export const translations = {
             selectCategory: "Select Category",
             deleteConfirmTitle: "Delete Transaction",
             deleteConfirm: "Are you sure you want to delete this transaction? This action cannot be undone.",
-            account: "Account"
+            account: "Account",
+            deleting: "Deleting..."
         },
         time: {
             today: "Today",
@@ -232,7 +240,14 @@ export const translations = {
             security: "Seguridad",
             changePassword: "Cambiar Contraseña",
             general: "General",
-            startOfWeek: "Inicio de Semana"
+            startOfWeek: "Inicio de Semana",
+            dangerZone: "Zona Peligrosa",
+            deleteAllData: "Eliminar Todos los Datos",
+            deleteAllDataDesc: "Elimina permanentemente todos tus registros",
+            deleteConfirmTitle: "¿Estás absolutamente seguro?",
+            deleteWarning: "Esta acción no se puede deshacer. Esto eliminará permanentemente tus transacciones, cuentas, presupuestos y categorías.",
+            deleteInstruction: 'Por favor, escribe "DELETE" para confirmar:',
+            confirmDelete: "Eliminar Todo"
         },
         days: {
             sunday: "Domingo",
@@ -315,7 +330,8 @@ export const translations = {
             save: "Guardar",
             deleteConfirmTitle: "Eliminar Transacción",
             deleteConfirm: "¿Estás seguro de que quieres eliminar esta transacción? Esta acción no se puede deshacer.",
-            account: "Cuenta"
+            account: "Cuenta",
+            deleting: "Eliminando..."
         },
         time: {
             today: "Hoy",
@@ -424,7 +440,14 @@ export const translations = {
             security: "Segurança",
             changePassword: "Alterar Senha",
             general: "Geral",
-            startOfWeek: "Início da Semana"
+            startOfWeek: "Início da Semana",
+            dangerZone: "Zona de Perigo",
+            deleteAllData: "Apagar Todos os Dados",
+            deleteAllDataDesc: "Apagar permanentemente todos os seus registos",
+            deleteConfirmTitle: "Tens a certeza absoluta?",
+            deleteWarning: "Esta ação não pode ser desfeita. Isto apagará permanentemente as tuas transações, contas, orçamentos e categorias.",
+            deleteInstruction: 'Por favor, escreve "DELETE" para confirmar:',
+            confirmDelete: "Apagar Tudo"
         },
         days: {
             sunday: "Domingo",
@@ -504,7 +527,8 @@ export const translations = {
             save: "Salvar",
             deleteConfirmTitle: "Excluir Transação",
             deleteConfirm: "Tem certeza que deseja excluir esta transação? Esta ação não pode ser desfeita.",
-            account: "Conta"
+            account: "Conta",
+            deleting: "A apagar..."
         },
         time: {
             today: "Hoje",
@@ -613,7 +637,14 @@ export const translations = {
             security: "Güvenlik",
             changePassword: "Şifre Değiştir",
             general: "Genel",
-            startOfWeek: "Hafta Başlangıcı"
+            startOfWeek: "Hafta Başlangıcı",
+            dangerZone: "Tehlikeli Bölge",
+            deleteAllData: "Tüm Verileri Sil",
+            deleteAllDataDesc: "Tüm kayıtlarınızı kalıcı olarak silin",
+            deleteConfirmTitle: "Kesinlikle emin misiniz?",
+            deleteWarning: "Bu işlem geri alınamaz. Bu işlem tüm işlemlerinizi, hesaplarınızı, bütçelerinizi ve kategorilerinizi kalıcı olarak silecektir.",
+            deleteInstruction: 'Onaylamak için lütfen "DELETE" yazın:',
+            confirmDelete: "Her Şeyi Sil"
         },
         days: {
             sunday: "Pazar",
@@ -699,7 +730,8 @@ export const translations = {
             selectCategory: "Kategori Seçin",
             deleteConfirmTitle: "İşlemi Sil",
             deleteConfirm: "Bu işlemi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
-            account: "Hesap"
+            account: "Hesap",
+            deleting: "Siliniyor..."
         },
         time: {
             today: "Bugün",
