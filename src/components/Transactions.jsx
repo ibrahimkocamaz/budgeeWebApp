@@ -1126,7 +1126,9 @@ const Transactions = ({ limit, showControls = true }) => {
                 }
 
                 .widget-mode .group-items {
-                     /* Reuse existing styles */
+                     background-color: transparent;
+                     border: none;
+                     border-radius: 0;
                 }
 
                 .transaction-item {
@@ -1354,6 +1356,13 @@ const Transactions = ({ limit, showControls = true }) => {
                     padding: 48px;
                     color: var(--text-muted);
                     gap: 16px;
+                }
+
+                .transactions-wrapper.widget-mode .empty-state {
+                    background-color: transparent;
+                    border: none;
+                    border-radius: 0;
+                    padding: 24px 0;
                 }
 
                 .empty-icon {
