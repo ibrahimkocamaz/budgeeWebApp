@@ -90,6 +90,10 @@ export const AccountsProvider = ({ children }) => {
                 user_id: user.id
             };
 
+            // Only add credit fields if they have values (avoid sending '' to numeric columns)
+            if (newAccount.credit_limit) accountData.credit_limit = newAccount.credit_limit;
+            if (newAccount.due_date) accountData.due_date = newAccount.due_date;
+
             const { data, error } = await supabase
                 .from('accounts')
                 .insert([accountData])
@@ -101,22 +105,28 @@ export const AccountsProvider = ({ children }) => {
             return { data, error: null };
         } catch (error) {
             console.error('Error adding account:', error.message);
+            alert('Error adding account: ' + error.message);
             return { data: null, error };
         }
     };
 
     const updateAccount = async (updatedAccount) => {
         try {
+            const updatePayload = {
+                name: updatedAccount.name,
+                type: updatedAccount.type,
+                balance: updatedAccount.balance,
+                currency: updatedAccount.currency,
+                color: updatedAccount.color,
+                icon: updatedAccount.icon
+            };
+
+            if (updatedAccount.credit_limit) updatePayload.credit_limit = updatedAccount.credit_limit;
+            if (updatedAccount.due_date) updatePayload.due_date = updatedAccount.due_date;
+
             const { data, error } = await supabase
                 .from('accounts')
-                .update({
-                    name: updatedAccount.name,
-                    type: updatedAccount.type,
-                    balance: updatedAccount.balance,
-                    currency: updatedAccount.currency,
-                    color: updatedAccount.color,
-                    icon: updatedAccount.icon
-                })
+                .update(updatePayload)
                 .eq('id', updatedAccount.id)
                 .select()
                 .single();
@@ -129,6 +139,7 @@ export const AccountsProvider = ({ children }) => {
             return { data, error: null };
         } catch (error) {
             console.error('Error updating account:', error.message);
+            alert('Error updating account: ' + error.message);
             return { data: null, error };
         }
     };

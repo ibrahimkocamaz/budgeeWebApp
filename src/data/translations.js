@@ -199,10 +199,19 @@ export const translations = {
             saveBtn: "Save Changes",
             types: {
                 bank: "Bank",
+                creditCard: "Credit Card",
                 card: "Card",
                 savings: "Savings",
                 cash: "Cash"
-            }
+            },
+            available: "Available",
+            currentBill: "Current Bill",
+            dueOn: "Due on {{date}}",
+            balanceOwedLabel: "Current Balance (Owed)",
+            creditLimit: "Credit Limit",
+            dueDate: "Due Date (Day of Month)",
+            dueDate: "Due Date (Day of Month)",
+            negativeBalanceHint: "Enter the amount you currently owe (e.g. 500)"
         }
     },
     es: {
@@ -400,10 +409,19 @@ export const translations = {
             saveBtn: "Guardar Cambios",
             types: {
                 bank: "Banco",
+                creditCard: "Tarjeta de Crédito",
                 card: "Tarjeta",
                 savings: "Ahorros",
                 cash: "Efectivo"
-            }
+            },
+            available: "Disponible",
+            currentBill: "Factura Actual",
+            dueOn: "Vence el {{date}}",
+            balanceOwedLabel: "Saldo Actual (Deuda)",
+            creditLimit: "Límite de Crédito",
+            dueDate: "Día de Pago",
+            dueDate: "Día de Pago",
+            negativeBalanceHint: "Introduce la cantidad que debes actualmente (ej. 500)"
         }
     },
     pt: {
@@ -598,10 +616,19 @@ export const translations = {
             saveBtn: "Salvar Alterações",
             types: {
                 bank: "Banco",
+                creditCard: "Cartão de Crédito",
                 card: "Cartão",
                 savings: "Poupança",
                 cash: "Dinheiro"
-            }
+            },
+            available: "Disponível",
+            currentBill: "Fatura Atual",
+            dueOn: "Vence dia {{date}}",
+            balanceOwedLabel: "Saldo Atual (Devido)",
+            creditLimit: "Limite de Crédito",
+            dueDate: "Dia do Vencimento",
+            dueDate: "Dia do Vencimento",
+            negativeBalanceHint: "Insira o valor que você deve atualmente (ex. 500)"
         }
     },
     tr: {
@@ -802,10 +829,19 @@ export const translations = {
             saveBtn: "Değişiklikleri Kaydet",
             types: {
                 bank: "Banka",
+                creditCard: "Kredi Kartı",
                 card: "Kart",
                 savings: "Birikim",
                 cash: "Nakit"
-            }
+            },
+            available: "KullanılabilirLimit",
+            currentBill: "Güncel Borç",
+            dueOn: "Son Ödeme: Ayın {{date}}",
+            balanceOwedLabel: "Güncel Borç (Eksi)",
+            creditLimit: "Kredi Limiti",
+            dueDate: "Son Ödeme Günü",
+            dueDate: "Son Ödeme Günü",
+            negativeBalanceHint: "Mevcut borç miktarını girin (ör. 500)"
         }
     }
 };

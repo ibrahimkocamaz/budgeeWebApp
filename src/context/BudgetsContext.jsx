@@ -19,6 +19,17 @@ export const BudgetsProvider = ({ children }) => {
         }
     }, [user]);
 
+    // Modal State moved to Context
+    const [modalState, setModalState] = useState({ isOpen: false, mode: 'create', budget: null });
+
+    const openModal = (mode = 'create', budget = null) => {
+        setModalState({ isOpen: true, mode, budget });
+    };
+
+    const closeModal = () => {
+        setModalState({ isOpen: false, mode: 'create', budget: null });
+    };
+
     const fetchBudgets = async () => {
         try {
             setLoading(true);
@@ -105,7 +116,10 @@ export const BudgetsProvider = ({ children }) => {
             loading,
             addBudget,
             updateBudget,
-            deleteBudget
+            deleteBudget,
+            modalState, // Expoosed state
+            openModal,  // Exposed Open handler
+            closeModal  // Exposed Close handler
         }}>
             {children}
         </BudgetsContext.Provider>

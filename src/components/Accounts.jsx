@@ -36,15 +36,17 @@ const Accounts = () => {
         balance: '',
         currency: 'USD',
         color: '#0aac35',
-        icon: 'Landmark'
+        icon: 'Landmark',
+        credit_limit: '',
+        due_date: ''
     };
     const [formData, setFormData] = useState(defaultAccountState);
 
     const accountTypes = [
-        { id: 'Bank', icon: Landmark, label: 'Bank', color: '#0aac35' },
-        { id: 'Card', icon: CreditCard, label: 'Card', color: '#2196f3' },
-        { id: 'Savings', icon: PiggyBank, label: 'Savings', color: '#9c27b0' },
-        { id: 'Cash', icon: Wallet, label: 'Cash', color: '#ff9800' },
+        { id: 'Bank', icon: Landmark, label: t('accounts.types.bank') || 'Bank', color: '#0aac35' },
+        { id: 'Card', icon: CreditCard, label: t('accounts.types.creditCard') || 'Credit Card', color: '#2196f3' },
+        { id: 'Savings', icon: PiggyBank, label: t('accounts.types.savings') || 'Savings', color: '#9c27b0' },
+        { id: 'Cash', icon: Wallet, label: t('accounts.types.cash') || 'Cash', color: '#ff9800' },
     ];
 
     // handlers
@@ -108,7 +110,8 @@ const Accounts = () => {
         setEditingAccount(account);
         setFormData({
             ...account,
-            balance: account.balance.toString()
+            // If it's a card, show positive value for editing implies debt
+            balance: account.type === 'Card' ? Math.abs(account.balance).toString() : account.balance.toString()
         });
         setShowAddModal(true);
     };
@@ -122,9 +125,16 @@ const Accounts = () => {
     const handleSaveAccount = (e) => {
         e.preventDefault();
 
+        let finalBalance = parseFloat(formData.balance) || 0;
+
+        // For Credit Cards, user enters positive debt, so we store as negative
+        if (formData.type === 'Card') {
+            finalBalance = -Math.abs(finalBalance);
+        }
+
         const accountData = {
             ...formData,
-            balance: parseFloat(formData.balance) || 0,
+            balance: finalBalance,
         };
 
         if (editingAccount) {
@@ -202,9 +212,34 @@ const Accounts = () => {
 
                                     <div className="account-details">
                                         <h3 className="account-name">{account.name}</h3>
-                                        <p className="account-balance">
-                                            {formatAmount(account.balance)}
-                                        </p>
+
+                                        {account.type === 'Card' ? (
+                                            <div className="credit-card-info">
+                                                <div className="cc-row">
+                                                    <span className="cc-label">{t('accounts.available') || 'Available'}</span>
+                                                    <span className="cc-value success">
+                                                        {formatAmount((parseFloat(account.credit_limit || 0) + parseFloat(account.balance || 0)))}
+                                                    </span>
+                                                </div>
+                                                <div className="cc-row">
+                                                    <span className="cc-label">{t('accounts.currentBill') || 'Current Bill'}</span>
+                                                    <span className="cc-value warning">
+                                                        {formatAmount(account.balance < 0 ? Math.abs(account.balance) : 0)}
+                                                    </span>
+                                                </div>
+                                                {account.due_date && (
+                                                    <div className="cc-footer">
+                                                        <span className="cc-due">
+                                                            {t('accounts.dueOn', { date: account.due_date }) || `Due on ${account.due_date}`}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <p className="account-balance">
+                                                {formatAmount(account.balance)}
+                                            </p>
+                                        )}
                                     </div>
                                     <div className="account-card-bg-decoration"></div>
                                 </div>
@@ -304,7 +339,7 @@ const Accounts = () => {
                             </div>
 
                             <div className="form-group">
-                                <label>{t('accounts.balanceLabel') || 'Current Balance'}</label>
+                                <label>{formData.type === 'Card' ? (t('accounts.balanceOwedLabel') || 'Current Balance (Owed)') : (t('accounts.balanceLabel') || 'Current Balance')}</label>
                                 <input
                                     type="number"
                                     required
@@ -313,7 +348,38 @@ const Accounts = () => {
                                     onChange={e => setFormData({ ...formData, balance: e.target.value })}
                                     placeholder="0.00"
                                 />
+                                {formData.type === 'Card' && (
+                                    <small className="form-hint">{t('accounts.negativeBalanceHint') || 'Enter negative value if you already owe money (e.g. -500)'}</small>
+                                )}
                             </div>
+
+                            {formData.type === 'Card' && (
+                                <>
+                                    <div className="form-group">
+                                        <label>{t('accounts.creditLimit') || 'Credit Limit'}</label>
+                                        <input
+                                            type="number"
+                                            required
+                                            min="0"
+                                            step="0.01"
+                                            value={formData.credit_limit || ''}
+                                            onChange={e => setFormData({ ...formData, credit_limit: e.target.value })}
+                                            placeholder="e.g. 5000"
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>{t('accounts.dueDate') || 'Due Date (Day of Month)'}</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max="31"
+                                            value={formData.due_date || ''}
+                                            onChange={e => setFormData({ ...formData, due_date: e.target.value })}
+                                            placeholder="e.g. 15"
+                                        />
+                                    </div>
+                                </>
+                            )}
 
                             <button type="submit" className="submit-btn" style={{ backgroundColor: formData.color }}>
                                 {editingAccount ? (t('accounts.saveBtn') || 'Save Changes') : (t('accounts.createBtn') || 'Create Account')}
@@ -480,6 +546,51 @@ const Accounts = () => {
                     letter-spacing: -0.5px;
                 }
 
+                .credit-card-info {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.5rem;
+                    margin-top: 0.5rem;
+                }
+
+                .cc-row {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    font-size: 0.9rem;
+                }
+
+                .cc-label {
+                    color: var(--text-muted);
+                    font-weight: 500;
+                }
+
+                .cc-value {
+                    font-weight: 700;
+                }
+
+                .cc-value.success { color: var(--color-success); }
+                .cc-value.warning { color: var(--color-expense); } /* Usually red for owed */
+
+                .cc-footer {
+                    margin-top: 0.25rem;
+                    padding-top: 0.5rem;
+                    border-top: 1px dashed rgba(255,255,255,0.1);
+                }
+
+                .cc-due {
+                    font-size: 0.8rem;
+                    color: var(--text-muted);
+                    font-weight: 600;
+                }
+
+                .form-hint {
+                    display: block;
+                    margin-top: 0.25rem;
+                    font-size: 0.8rem;
+                    color: var(--text-muted);
+                }
+
                 .account-card-bg-decoration {
                     position: absolute;
                     top: -20px;
@@ -559,12 +670,23 @@ const Accounts = () => {
 
                 .modal-content {
                     background: var(--bg-card);
-                    width: 100%;
+                    width: 90%;
                     max-width: 500px;
                     border-radius: 24px;
                     padding: 2rem;
                     border: 1px solid var(--color-divider);
                     box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+                    max-height: 90vh;
+                    overflow-y: auto;
+                    position: relative;
+                }
+
+                @media (max-width: 768px) {
+                    .modal-content {
+                        padding: 1.5rem;
+                        width: 95%;
+                        border-radius: 20px;
+                    }
                 }
 
                 .modal-header {

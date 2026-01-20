@@ -7,6 +7,7 @@ import LanguageCurrencyModal from './LanguageCurrencyModal';
 
 import { useAuth } from '../context/AuthContext';
 import { useTransactions } from '../context/TransactionsContext';
+import { useBudgets } from '../context/BudgetsContext';
 
 const Layout = ({ children }) => {
   const location = useLocation();
@@ -14,6 +15,7 @@ const Layout = ({ children }) => {
   const { isDark, toggleTheme } = useTheme();
   const { signOut, user } = useAuth(); // Get signOut and user
   const { searchTerm, setSearchTerm } = useTransactions();
+  const { openModal } = useBudgets();
   const isActive = (path) => location.pathname === path;
   const [showModal, setShowModal] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -138,6 +140,13 @@ const Layout = ({ children }) => {
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
+              )}
+
+              {location.pathname === '/budgets' && (
+                <button className="btn-header-add" onClick={() => openModal('create')}>
+                  <Plus size={18} />
+                  <span className="add-btn-text">{t('budgets.create')}</span>
+                </button>
               )}
 
               <div className="header-actions desktop-only">
@@ -429,9 +438,6 @@ const Layout = ({ children }) => {
         }
         
         @media (max-width: 768px) {
-             .add-btn-text {
-                 display: none;
-             }
              .btn-primary {
                  padding: 0.75rem;
              }
@@ -678,6 +684,35 @@ const Layout = ({ children }) => {
                  font-size: 1.1rem;
              }
         }
+            /* Header specific button for adding items */
+             .btn-header-add {
+                 background: none;
+                 border: none;
+                 color: var(--color-brand);
+                 font-weight: 600;
+                 display: flex;
+                 align-items: center;
+                 gap: 6px;
+                 font-size: 0.95rem;
+                 cursor: pointer;
+                 transition: opacity 0.2s;
+                 padding: 8px 12px;
+                 border-radius: 8px;
+             }
+             
+             .btn-header-add:hover {
+                 background-color: var(--bg-card); /* subtle highlight */
+                 opacity: 0.8;
+             }
+             
+             /* On mobile, maybe ensure text is visible or icon is prominent */
+             @media (max-width: 768px) {
+                 .btn-header-add {
+                     font-size: 0.9rem;
+                     padding: 6px 8px;
+                 }
+             }
+
       `}</style>
     </div >
   );

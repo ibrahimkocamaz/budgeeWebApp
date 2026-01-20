@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { ArrowUpRight, ArrowDownRight, DollarSign } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, DollarSign, Landmark, CreditCard, PiggyBank, Wallet, ChevronRight, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SpendingChart from './SpendingChart';
 import Budgets from './Budgets';
@@ -119,6 +119,86 @@ const Dashboard = () => {
                 </div>
               </div>
               <div className="card-amount error-text">{formatAmount(summary.expenses)}</div>
+            </div>
+          </section>
+
+          {/* Accounts Scroll Section */}
+          <section className="accounts-scroll-section">
+            <div className="accounts-widget">
+              <div className="widget-header">
+                <h2>{t('sidebar.accounts')}</h2>
+                <Link to="/accounts" className="btn-link">{t('dashboard.viewAll')}</Link>
+              </div>
+              <div className="accounts-scroll-container">
+                {accounts.map(account => {
+                  const getIcon = (iconName) => {
+                    if (!iconName) return Landmark;
+                    const name = iconName.toLowerCase();
+                    switch (name) {
+                      case 'landmark': case 'bank': return Landmark;
+                      case 'creditcard': case 'card': return CreditCard;
+                      case 'piggybank': case 'savings': return PiggyBank;
+                      case 'wallet': case 'cash': return Wallet;
+                      default: return Landmark;
+                    }
+                  };
+                  const Icon = getIcon(account.icon);
+                  return (
+                    <div
+                      key={account.id}
+                      className={`mini-account-card ${account.type === 'Card' ? 'multi-row' : 'single-row'}`}
+                      style={{ '--acc-color': account.color }}
+                    >
+                      {account.type === 'Card' ? (
+                        <>
+                          <div className="mini-card-header">
+                            <div className="mini-card-icon">
+                              <Icon size={20} color="white" />
+                            </div>
+                            <div className="mini-card-name">{account.name}</div>
+                            {account.due_date && (
+                              <div className="mini-card-due">
+                                {t('accounts.dueOn', { date: account.due_date }) || `Due ${account.due_date}`}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="mini-card-body">
+                            <div className="mini-cc-details">
+                              <div className="mini-cc-row">
+                                <span className="mini-label">{t('accounts.available') || 'Available'}</span>
+                                <span className="mini-value success">
+                                  {formatAmount((parseFloat(account.credit_limit || 0) + parseFloat(account.balance || 0)))}
+                                </span>
+                              </div>
+                              <div className="mini-cc-row">
+                                <span className="mini-label">{t('accounts.currentBill') || 'Bill'}</span>
+                                <span className="mini-value warning">
+                                  {formatAmount(account.balance < 0 ? Math.abs(account.balance) : 0)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="mini-card-left">
+                            <div className="mini-card-icon">
+                              <Icon size={20} color="white" />
+                            </div>
+                            <div className="mini-card-name">{account.name}</div>
+                          </div>
+                          <div className="mini-card-right">
+                            <div className="mini-card-balance">
+                              {formatAmount(account.balance)}
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </section>
 
@@ -555,6 +635,158 @@ const Dashboard = () => {
             align-items: center;
             margin-bottom: 1.5rem;
         }
+
+        /* Accounts Scroll Section - Mobile Only */
+        .accounts-scroll-section {
+            display: none; /* Hidden by default on desktop */
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .accounts-scroll-section {
+                display: flex;
+            }
+        }
+        
+        .accounts-widget {
+          background-color: var(--bg-card);
+          border-radius: 1rem;
+          border: 1px solid var(--color-divider);
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+        }
+
+        .accounts-scroll-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .mini-account-card {
+            background: transparent;
+            border-bottom: 1px solid var(--color-divider);
+            padding: 1rem;
+            display: flex;
+            gap: 12px;
+            transition: background-color 0.2s;
+        }
+
+        .mini-account-card.multi-row {
+            flex-direction: column;
+        }
+
+        .mini-account-card.single-row {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .mini-account-card:last-child {
+            border-bottom: none;
+        }
+
+        .mini-account-card:hover {
+            background-color: rgba(0,0,0,0.02);
+            border-color: var(--color-divider); 
+        }
+
+        .mini-card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Single Row Inner Containers */
+        .mini-card-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .mini-card-right {
+             display: flex;
+             align-items: center;
+        }
+
+        .mini-card-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: var(--acc-color, var(--text-muted));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mini-card-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-main);
+            flex: 1; /* Push right content to edge */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .mini-card-due {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            background: rgba(0,0,0,0.05);
+            padding: 2px 8px;
+            border-radius: 12px;
+            white-space: nowrap;
+        }
+
+        /* Dark mode adjustment for due badge if needed */
+        @media (prefers-color-scheme: dark) {
+            .mini-card-due {
+                background: rgba(255,255,255,0.1);
+            }
+        }
+
+        .mini-card-body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .mini-card-balance {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        /* Credit Card Specific Styles */
+        .mini-cc-details {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 4px;
+            margin-left: 44px; /* Align with name */
+        }
+        
+        .mini-account-card.single-row .mini-card-balance {
+             margin-left: 0; /* No margin needed in flex row */
+        }
+
+        .mini-cc-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        .mini-label {
+            color: var(--text-muted);
+        }
+
+        .mini-value {
+            font-weight: 600;
+        }
+
+        .mini-value.success { color: var(--color-success); }
+        .mini-value.warning { color: var(--color-cancel); }
+
 
       `}</style>
     </div>
