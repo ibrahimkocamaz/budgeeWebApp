@@ -1,4 +1,4 @@
-import { Lock, ChevronRight, Moon, Globe, DollarSign, User, LogOut, Trash2, AlertTriangle } from 'lucide-react';
+import { Lock, ChevronRight, Moon, Globe, DollarSign, User, LogOut, Trash2, AlertTriangle, Calendar } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useSettings } from '../context/SettingsContext';
 import { useTheme } from '../context/ThemeContext';
@@ -141,7 +141,7 @@ const Settings = () => {
             <section className="settings-section">
                 <h3 className="section-title">{t('settings.general') || 'General'}</h3>
                 <div className="settings-card">
-                    <div className="settings-item">
+                    <div className="settings-item border-bottom">
                         <div className="item-left">
                             <div className="icon-circle">
                                 <ChevronRight size={20} style={{ transform: 'rotate(90deg)' }} />
@@ -157,6 +157,26 @@ const Settings = () => {
                                 <option value="sunday">{t('days.sunday') || 'Sunday'}</option>
                                 <option value="monday">{t('days.monday') || 'Monday'}</option>
                                 <option value="saturday">{t('days.saturday') || 'Saturday'}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="settings-item">
+                        <div className="item-left">
+                            <div className="icon-circle">
+                                <Calendar size={20} />
+                            </div>
+                            <span>{t('settings.monthStartDay') || 'Month Start Day'}</span>
+                        </div>
+                        <div className="item-right">
+                            <select
+                                className="settings-select"
+                                value={settings.monthStartDay || 1}
+                                onChange={(e) => updateSetting('monthStartDay', parseInt(e.target.value))}
+                            >
+                                {[...Array(28)].map((_, i) => (
+                                    <option key={i + 1} value={i + 1}>{i + 1}</option>
+                                ))}
                             </select>
                         </div>
                     </div>

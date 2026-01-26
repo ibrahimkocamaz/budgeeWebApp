@@ -9,6 +9,7 @@ import { useAccounts } from '../context/AccountsContext';
 import React, { useState, useMemo, useEffect } from 'react';
 import { getCategoryIcon, getCategoryColor } from '../data/categoryOptions';
 import ConfirmationModal from './ConfirmationModal';
+import { useDateFilter } from '../hooks/useDateFilter';
 
 const Transactions = ({ limit, showControls = true }) => {
 
@@ -18,6 +19,7 @@ const Transactions = ({ limit, showControls = true }) => {
     const { transactions: allTransactions, deleteTransaction, updateTransaction, searchTerm } = useTransactions();
     const { getCategoriesByType, categories } = useCategories();
     const { accounts } = useAccounts();
+    const { getMonthRange } = useDateFilter();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
 
@@ -135,7 +137,8 @@ const Transactions = ({ limit, showControls = true }) => {
                 matchesTime = txDate >= startOfWeek && txDate <= endOfWeek;
             } else if (timeFilter === 'month') {
                 // Use selectedDate instead of now
-                matchesTime = txDate.getMonth() === selectedDate.getMonth() && txDate.getFullYear() === selectedDate.getFullYear();
+                const { startDate, endDate } = getMonthRange(selectedDate);
+                matchesTime = txDate >= startDate && txDate <= endDate;
             } else if (timeFilter === 'custom') {
                 if (customDateRange.start && customDateRange.end) {
                     const startDate = new Date(customDateRange.start);
@@ -268,8 +271,8 @@ const Transactions = ({ limit, showControls = true }) => {
 
                 matchesTime = txDate >= startOfWeek && txDate <= endOfWeek;
             } else if (timeFilter === 'month') {
-                matchesTime = txDate.getMonth() === selectedDate.getMonth() &&
-                    txDate.getFullYear() === selectedDate.getFullYear();
+                const { startDate, endDate } = getMonthRange(selectedDate);
+                matchesTime = txDate >= startDate && txDate <= endDate;
             } else if (timeFilter === 'custom') {
                 if (customDateRange.start && customDateRange.end) {
                     const startDate = new Date(customDateRange.start);
@@ -336,7 +339,7 @@ const Transactions = ({ limit, showControls = true }) => {
                                     <ChevronLeft size={16} />
                                 </button>
                                 <span className="current-month-label" onClick={() => setTimeFilter('month')}>
-                                    {selectedDate.toLocaleDateString(language, { month: 'long', year: 'numeric' })}
+                                    {getMonthRange(selectedDate).label}
                                 </span>
                                 <button className="nav-btn" onClick={goToNextMonth}>
                                     <ChevronRight size={16} />

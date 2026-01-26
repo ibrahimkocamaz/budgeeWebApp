@@ -8,6 +8,7 @@ import { useTransactions } from '../context/TransactionsContext';
 import { useSettings } from '../context/SettingsContext';
 import { getCategoryIcon, getCategoryColor } from '../data/categoryOptions';
 import ConfirmationModal from './ConfirmationModal';
+import { useDateFilter } from '../hooks/useDateFilter';
 
 const Budgets = ({ limit, simpleMode = false }) => {
     const { t, tCategory } = useLanguage();
@@ -17,6 +18,7 @@ const Budgets = ({ limit, simpleMode = false }) => {
     const { transactions } = useTransactions();
     const { settings } = useSettings();
     const expenseCategories = getCategoriesByType('expense');
+    const { isInCurrentMonth } = useDateFilter();
 
     // const [budgets, setBudgets] = useState(mockBudgets); // REPLACED BY CONTEXT
     // Local modal state removed - using context
@@ -102,7 +104,7 @@ const Budgets = ({ limit, simpleMode = false }) => {
                 return date.getFullYear() === currentYear;
             }
             if (period === 'monthly') {
-                return date.getFullYear() === currentYear && date.getMonth() === currentMonth;
+                return isInCurrentMonth(dateStr);
             }
             if (period === 'weekly') {
                 const startDayMap = { 'sunday': 0, 'monday': 1, 'saturday': 6 };

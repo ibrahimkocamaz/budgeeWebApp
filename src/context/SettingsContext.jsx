@@ -10,6 +10,7 @@ export const SettingsProvider = ({ children }) => {
         const saved = localStorage.getItem('budgee_settings');
         return saved ? JSON.parse(saved) : {
             startOfWeek: 'sunday', // 'sunday', 'monday', 'saturday'
+            monthStartDay: 1, // 1-31
             // Add other settings here later
         };
     });

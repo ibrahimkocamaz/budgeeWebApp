@@ -9,6 +9,7 @@ import { useCurrency } from '../context/CurrencyContext';
 import { useCategories } from '../context/CategoriesContext';
 import { useAccounts } from '../context/AccountsContext';
 import { useTransactions } from '../context/TransactionsContext';
+import { useDateFilter } from '../hooks/useDateFilter';
 import { useRecurringSeries } from '../hooks/useRecurringSeries';
 import { getCategoryIcon, getCategoryColor as getDefaultCategoryColor } from '../data/categoryOptions';
 
@@ -56,20 +57,14 @@ const Dashboard = () => {
   };
 
   const summary = useMemo(() => {
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
-
-    // Calculate last month date correctly handling January
-    const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const lastMonth = lastMonthDate.getMonth();
-    const lastMonthYear = lastMonthDate.getFullYear();
+    const { getMonthRange } = useDateFilter();
+    const { startDate, endDate } = getMonthRange(new Date());
 
     const stats = transactions.reduce((acc, tx) => {
       const txDate = new Date(tx.date);
       const amount = Number(tx.amount);
 
-      if (txDate.getMonth() === currentMonth && txDate.getFullYear() === currentYear) {
+      if (txDate >= startDate && txDate <= endDate) {
         if (tx.type === 'income') acc.income += amount;
         else acc.expenses += amount;
       }

@@ -5,31 +5,22 @@ import { getCategoryColor, getCategoryIcon } from '../data/categoryOptions';
 import { useCurrency } from '../context/CurrencyContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useCategories } from '../context/CategoriesContext';
+import { useDateFilter } from '../hooks/useDateFilter';
 
 const SpendingChart = () => {
     const { formatAmount } = useCurrency();
     const { t, tCategory } = useLanguage();
     const { categories } = useCategories();
     const { transactions } = useTransactions();
+    const { getMonthRange } = useDateFilter();
 
     const spendingData = useMemo(() => {
-        const now = new Date();
-        const currentMonth = now.getMonth();
-        const currentYear = now.getFullYear();
+        const { startDate, endDate } = getMonthRange(new Date());
 
         const expenses = transactions.filter(t => {
             if (t.type !== 'expense') return false;
-
-            // Safer comparison using string splitting to avoid timezone shifts
-            if (typeof t.date === 'string') {
-                const [year, month] = t.date.split('-');
-                // month is 01-12, currentMonth is 0-11
-                return (parseInt(month) - 1) === currentMonth && parseInt(year) === currentYear;
-            }
-
-            // Fallback if it's already a Date object
             const tDate = new Date(t.date);
-            return tDate.getMonth() === currentMonth && tDate.getFullYear() === currentYear;
+            return tDate >= startDate && tDate <= endDate;
         });
 
         // Fast lookup map for category details

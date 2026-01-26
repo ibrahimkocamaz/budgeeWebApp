@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, CreditCard, Landmark, PiggyBank, Wallet, X, Check, Pencil, Trash2, ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 import ConfirmationModal from './ConfirmationModal';
 import { getCategoryIcon, getCategoryColor } from '../data/categoryOptions';
+import { useDateFilter } from '../hooks/useDateFilter';
 import '../App.css';
 
 const Accounts = () => {
@@ -18,6 +19,7 @@ const Accounts = () => {
     const { transactions } = useTransactions();
     const { formatAmount } = useCurrency();
     const { categories } = useCategories();
+    const { getMonthRange } = useDateFilter();
     const navigate = useNavigate();
 
     // Modal States
@@ -68,13 +70,13 @@ const Accounts = () => {
     };
 
     const monthlyData = useMemo(() => {
-        const startOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
-        const endOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0, 23, 59, 59);
+        const { startDate, endDate, label } = getMonthRange(selectedDate);
+        // Remove manual calculation of startOfMonth/endOfMonth
 
         // Filter transactions for this month
         const monthlyTransactions = transactions.filter(tx => {
             const d = new Date(tx.date);
-            return d >= startOfMonth && d <= endOfMonth;
+            return d >= startDate && d <= endDate;
         });
 
         // Calculate total net change for the month
@@ -95,7 +97,7 @@ const Accounts = () => {
             };
         }).sort((a, b) => b.monthlyNet - a.monthlyNet); // Highest gain first
 
-        return { accountStats, netChange };
+        return { accountStats, netChange, label };
     }, [selectedDate, transactions, accounts]);
 
 
@@ -262,7 +264,7 @@ const Accounts = () => {
                         <div className="month-header">
                             <button className="nav-btn" onClick={goToPreviousMonth}><ChevronLeft size={20} /></button>
                             <div className="month-title-group">
-                                <h3>{formatMonthYear(selectedDate)}</h3>
+                                <h3>{monthlyData.label || formatMonthYear(selectedDate)}</h3>
                                 <span className={`month-net ${monthlyData.netChange >= 0 ? 'income' : 'expense'}`}>
                                     {monthlyData.netChange >= 0 ? '+' : ''}{formatAmount(monthlyData.netChange)}
                                 </span>
