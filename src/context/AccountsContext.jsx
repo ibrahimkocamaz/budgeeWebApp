@@ -1,0 +1,200 @@
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { supabase } from '../supabaseClient';
+import { useAuth } from './AuthContext';
+import { toCents, toDollars } from '../utils/moneyUtils';
+
+const AccountsContext = createContext();
+
+export const useAccounts = () => useContext(AccountsContext);
+
+export const AccountsProvider = ({ children }) => {
+    const [accounts, setAccounts] = useState([]);
+    const { user } = useAuth();
+    const [loading, setLoading] = useState(true);
+    const isSeeding = useRef(false);
+
+    useEffect(() => {
+        if (user) {
+            fetchAccounts();
+        } else {
+            setAccounts([]);
+        }
+    }, [user]);
+
+    const fetchAccounts = async () => {
+        try {
+            setLoading(true);
+            const { data, error } = await supabase
+                .from('accounts')
+                .select('*')
+                .order('created_at', { ascending: true });
+
+            if (error) throw error;
+
+            if (data.length === 0) {
+                // Prevent race conditions with ref lock
+                if (!isSeeding.current) {
+                    isSeeding.current = true;
+                    await seedDefaultAccount();
+                    isSeeding.current = false;
+                }
+            } else {
+                setAccounts(data.map(acc => ({
+                    ...acc,
+                    balance: toDollars(acc.balance),
+                    credit_limit: toDollars(acc.credit_limit)
+                })));
+            }
+        } catch (error) {
+            console.error('Error fetching accounts:', error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const seedDefaultAccount = async () => {
+        try {
+            // Double security: Check DB again to ensure no account exists
+            const { count } = await supabase
+                .from('accounts')
+                .select('*', { count: 'exact', head: true });
+
+            if (count > 0) return;
+
+            const defaultAccount = {
+                name: 'Main Account', // Frontend will translate this if needed
+                type: 'Cash',
+                balance: 0,
+                color: '#4caf50',
+                icon: 'Wallet',
+                user_id: user.id
+            };
+
+            const { data, error } = await supabase
+                .from('accounts')
+                .insert([defaultAccount])
+                .select()
+                .single();
+
+            if (error) throw error;
+            const formattedAccount = {
+                ...data,
+                balance: toDollars(data.balance),
+                credit_limit: toDollars(data.credit_limit)
+            };
+            setAccounts([formattedAccount]);
+        } catch (error) {
+            console.error('Error seeding default account:', error.message);
+        }
+    };
+
+    const addAccount = async (newAccount) => {
+        try {
+            const accountData = {
+                name: newAccount.name,
+                type: newAccount.type,
+                balance: toCents(newAccount.balance),
+                currency: newAccount.currency,
+                color: newAccount.color,
+                icon: newAccount.icon,
+                user_id: user.id
+            };
+
+            // Only add credit fields if they have values (avoid sending '' to numeric columns)
+            if (newAccount.credit_limit) accountData.credit_limit = toCents(newAccount.credit_limit);
+            if (newAccount.due_date) accountData.due_date = newAccount.due_date;
+
+            const { data, error } = await supabase
+                .from('accounts')
+                .insert([accountData])
+                .select()
+                .single();
+
+            if (error) throw error;
+            const formattedData = {
+                ...data,
+                balance: toDollars(data.balance),
+                credit_limit: toDollars(data.credit_limit)
+            };
+            setAccounts(prev => [...prev, formattedData]);
+            return { data: formattedData, error: null };
+        } catch (error) {
+            console.error('Error adding account:', error.message);
+            alert('Error adding account: ' + error.message);
+            return { data: null, error };
+        }
+    };
+
+    const updateAccount = async (updatedAccount) => {
+        try {
+            const updatePayload = {
+                name: updatedAccount.name,
+                type: updatedAccount.type,
+                balance: toCents(updatedAccount.balance),
+                currency: updatedAccount.currency,
+                color: updatedAccount.color,
+                icon: updatedAccount.icon
+            };
+
+            if (updatedAccount.credit_limit) updatePayload.credit_limit = toCents(updatedAccount.credit_limit);
+            if (updatedAccount.due_date) updatePayload.due_date = updatedAccount.due_date;
+
+            const { data, error } = await supabase
+                .from('accounts')
+                .update(updatePayload)
+                .eq('id', updatedAccount.id)
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            const formattedData = {
+                ...data,
+                balance: toDollars(data.balance),
+                credit_limit: toDollars(data.credit_limit)
+            };
+
+            setAccounts(prev => prev.map(acc =>
+                acc.id === updatedAccount.id ? formattedData : acc
+            ));
+            return { data: formattedData, error: null };
+        } catch (error) {
+            console.error('Error updating account:', error.message);
+            alert('Error updating account: ' + error.message);
+            return { data: null, error };
+        }
+    };
+
+    const deleteAccount = async (id) => {
+        try {
+            if (accounts.length <= 1) {
+                console.warn('Cannot delete the only account');
+                return { error: 'Cannot delete the only account' };
+            }
+
+            const { error } = await supabase
+                .from('accounts')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+            setAccounts(prev => prev.filter(acc => acc.id !== id));
+            return { error: null };
+        } catch (error) {
+            console.error('Error deleting account:', error.message);
+        }
+    };
+
+    return (
+        <AccountsContext.Provider value={{
+            accounts,
+            loading,
+            addAccount,
+            updateAccount,
+            deleteAccount,
+            fetchAccounts
+        }}>
+            {children}
+        </AccountsContext.Provider>
+    );
+};
