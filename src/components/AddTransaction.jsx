@@ -297,9 +297,7 @@ const AddTransaction = () => {
                 </div>
 
                 <div className="card-actions-row">
-                  <button type="button" className="action-row-btn" onClick={() => handleDuplicateRow(tx)} title="Duplicate">
-                    <Plus size={18} />
-                  </button>
+
                   {transactions.length > 1 && (
                     <button type="button" className="action-row-btn remove" onClick={() => handleRemoveRow(tx.id)} title="Delete">
                       <Trash2 size={18} />

@@ -18,7 +18,7 @@ const SpendingChart = () => {
         const { startDate, endDate } = getMonthRange(new Date());
 
         const expenses = transactions.filter(t => {
-            if (t.type !== 'expense') return false;
+            if (t.type !== 'expense' || t.payment_type === 'transfer') return false;
             const tDate = new Date(t.date);
             return tDate >= startDate && tDate <= endDate;
         });

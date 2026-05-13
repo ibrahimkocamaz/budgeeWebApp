@@ -169,24 +169,28 @@ export const TransactionsProvider = ({ children }) => {
 
     const transferMoney = async ({ fromAccountId, toAccountId, amount, date, description }) => {
         try {
+            const fromAccount = accounts.find(a => a.id === fromAccountId);
+            const toAccount = accounts.find(a => a.id === toAccountId);
+            const transferDescription = description || `${fromAccount?.name} → ${toAccount?.name}`;
+
             // 1. Create Expense from source account
             const expenseData = {
                 amount: toCents(amount),
                 category: 'Transfer',
                 date: date,
-                description: description || `Transfer to ${accounts.find(a => a.id === toAccountId)?.name}`,
+                description: transferDescription,
                 type: 'expense',
                 payment_type: 'transfer',
                 user_id: user.id,
                 account_id: fromAccountId
             };
 
-            // 2. Create Income to destination account
+            // 2. Prepare Income to destination account
             const incomeData = {
                 amount: toCents(amount),
                 category: 'Transfer',
                 date: date,
-                description: description || `Transfer from ${accounts.find(a => a.id === fromAccountId)?.name}`,
+                description: transferDescription,
                 type: 'income',
                 payment_type: 'transfer',
                 user_id: user.id,
@@ -201,9 +205,15 @@ export const TransactionsProvider = ({ children }) => {
 
             if (expenseErr) throw expenseErr;
 
+            // 2. Create Income to destination account with reference to expense
+            const incomeDataFinal = {
+                ...incomeData,
+                parent_transaction_id: expenseRes.id // Link to expense
+            };
+
             const { data: incomeRes, error: incomeErr } = await supabase
                 .from('transactions')
-                .insert([incomeData])
+                .insert([incomeDataFinal])
                 .select()
                 .single();
 
@@ -225,17 +235,25 @@ export const TransactionsProvider = ({ children }) => {
     const deleteTransaction = async (id) => {
         try {
             const txToDelete = transactions.find(t => t.id === id);
+            
+            // If it's a transfer, find the twin
+            let idsToDelete = [id];
+            if (txToDelete?.payment_type === 'transfer') {
+                const twin = transactions.find(t => 
+                    t.payment_type === 'transfer' && 
+                    (t.parent_transaction_id === id || txToDelete.parent_transaction_id === t.id)
+                );
+                if (twin) idsToDelete.push(twin.id);
+            }
 
             const { error } = await supabase
                 .from('transactions')
                 .delete()
-                .eq('id', id);
+                .in('id', idsToDelete);
 
             if (error) throw error;
 
-            setTransactions(prev => prev.filter(tx => tx.id !== id));
-
-
+            setTransactions(prev => prev.filter(tx => !idsToDelete.includes(tx.id)));
             fetchAccounts();
         } catch (error) {
             console.error('Error deleting transaction:', error.message);
@@ -244,15 +262,28 @@ export const TransactionsProvider = ({ children }) => {
 
     const deleteTransactions = async (ids) => {
         try {
+            // Find all twins for the given IDs
+            let allIdsToDelete = [...ids];
+            transactions.forEach(tx => {
+                if (ids.includes(tx.id) && tx.payment_type === 'transfer') {
+                    const twin = transactions.find(t => 
+                        t.payment_type === 'transfer' && 
+                        (t.parent_transaction_id === tx.id || tx.parent_transaction_id === t.id)
+                    );
+                    if (twin && !allIdsToDelete.includes(twin.id)) {
+                        allIdsToDelete.push(twin.id);
+                    }
+                }
+            });
+
             const { error } = await supabase
                 .from('transactions')
                 .delete()
-                .in('id', ids);
+                .in('id', allIdsToDelete);
 
             if (error) throw error;
 
-            const idSet = new Set(ids);
-            setTransactions(prev => prev.filter(tx => !idSet.has(tx.id)));
+            setTransactions(prev => prev.filter(tx => !allIdsToDelete.includes(tx.id)));
             fetchAccounts();
 
         } catch (error) {

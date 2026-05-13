@@ -131,6 +131,7 @@ const Budgets = ({ limit, simpleMode = false }) => {
                 .filter(tx =>
                     tx.category === budget.category &&
                     tx.type === 'expense' &&
+                    tx.payment_type !== 'transfer' &&
                     isInPeriod(tx.date, budget.period)
                 )
                 .reduce((sum, tx) => sum + Number(tx.amount), 0);

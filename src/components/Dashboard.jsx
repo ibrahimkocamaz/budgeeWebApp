@@ -52,6 +52,7 @@ const Dashboard = () => {
   };
 
   const getCategoryIconByName = (name) => {
+    if (name?.toLowerCase() === 'transfer') return Repeat;
     const cat = categories.find(c => c.name.toLowerCase() === (name || '').toLowerCase());
     return getCategoryIcon(cat ? cat.icon_key : name);
   };
@@ -65,6 +66,9 @@ const Dashboard = () => {
       const amount = Number(tx.amount);
 
       if (txDate >= startDate && txDate <= endDate) {
+        // Exclude transfers from income/expense stats
+        if (tx.payment_type === 'transfer') return acc;
+        
         if (tx.type === 'income') acc.income += amount;
         else acc.expenses += amount;
       }

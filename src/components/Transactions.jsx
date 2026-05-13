@@ -24,6 +24,7 @@ const Transactions = ({ limit, showControls = true }) => {
     const [searchParams] = useSearchParams();
 
     const getCategoryIconByName = (name) => {
+        if (name?.toLowerCase() === 'transfer') return RefreshCw;
         const cat = categories.find(c => c.name.toLowerCase() === (name || '').toLowerCase());
         return getCategoryIcon(cat ? cat.icon_key : name);
     };
@@ -151,7 +152,14 @@ const Transactions = ({ limit, showControls = true }) => {
                 }
             }
 
-            return matchesSearch && matchesTime;
+            // Deduplicate Transfers in "All Accounts" view
+            // Hide the 'income' side if it has a parent link
+            const isDuplicateTransfer = accountFilter === 'all' && 
+                tx.payment_type === 'transfer' && 
+                tx.type === 'income' && 
+                tx.parent_transaction_id;
+
+            return matchesSearch && matchesTime && !isDuplicateTransfer;
         });
     }, [searchTerm, timeFilter, customDateRange, allTransactions, selectedDate, settings]);
 
@@ -237,6 +245,9 @@ const Transactions = ({ limit, showControls = true }) => {
     // Calculate Totals based on Account and Time filters
     const totals = useMemo(() => {
         return allTransactions.reduce((acc, tx) => {
+            // Exclude transfers from income/expense totals
+            if (tx.payment_type === 'transfer') return acc;
+
             // 1. Account Filter
             if (accountFilter !== 'all' && tx.accountId !== accountFilter) {
                 return acc;
@@ -460,7 +471,9 @@ const Transactions = ({ limit, showControls = true }) => {
                         <div className="group-items">
                             {transactions.map(tx => {
                                 const categoryObj = categoryMap[tx.category.toLowerCase()];
-                                const Icon = categoryObj ? getCategoryIcon(categoryObj.icon_key) : getCategoryIcon(tx.category);
+                                const Icon = tx.payment_type === 'transfer' 
+                                    ? RefreshCw 
+                                    : (categoryObj ? getCategoryIcon(categoryObj.icon_key) : getCategoryIcon(tx.category));
                                 const color = categoryObj ? categoryObj.color : getCategoryColor(tx.category);
                                 const isRecurring = tx.paymentType === 'installment' || tx.recurring === 1;
                                 const isEditing = editingId === tx.id;
@@ -536,7 +549,7 @@ const Transactions = ({ limit, showControls = true }) => {
                                         <div
                                             className="icon-wrapper"
                                             style={{
-                                                backgroundColor: color,
+                                                backgroundColor: tx.payment_type === 'transfer' ? 'var(--color-brand-muted, #4A5568)' : color,
                                                 color: 'white'
                                             }}
                                         >
@@ -546,7 +559,7 @@ const Transactions = ({ limit, showControls = true }) => {
                                         <div className="details">
                                             <div className="top-row">
                                                 <span className="tx-description">
-                                                    {tCategory(tx.category)}
+                                                    {tx.payment_type === 'transfer' ? t('addTransaction.transfer') : tCategory(tx.category)}
                                                 </span>
                                             </div>
                                             <div className="bottom-row">
@@ -563,8 +576,8 @@ const Transactions = ({ limit, showControls = true }) => {
                                         </div>
 
                                         <div className="amount-container" style={{ marginLeft: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                                            <span className={`amount ${tx.type === 'income' ? 'positive' : 'negative'}`}>
-                                                {tx.type === 'income' ? '+' : '-'}{formatAmount(tx.amount)}
+                                            <span className={`amount ${tx.payment_type === 'transfer' ? 'transfer' : (tx.type === 'income' ? 'positive' : 'negative')}`}>
+                                                {tx.payment_type === 'transfer' ? '⇄ ' : (tx.type === 'income' ? '+' : '-')}{formatAmount(tx.amount)}
                                             </span>
                                             {!showControls && (
                                                 <span className="tx-date-sub" style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
@@ -636,17 +649,20 @@ const Transactions = ({ limit, showControls = true }) => {
                                 <div
                                     className="detail-icon"
                                     style={{
-                                        backgroundColor: categoryMap[selectedTransaction.category.toLowerCase()]?.color || getCategoryColor(selectedTransaction.category)
+                                        backgroundColor: selectedTransaction.payment_type === 'transfer' ? 'var(--color-brand-muted, #4A5568)' : (categoryMap[selectedTransaction.category.toLowerCase()]?.color || getCategoryColor(selectedTransaction.category))
                                     }}
                                 >
                                     {(() => {
+                                        if (selectedTransaction.payment_type === 'transfer') {
+                                            return <RefreshCw size={32} color="white" />;
+                                        }
                                         const cat = categoryMap[selectedTransaction.category.toLowerCase()];
                                         const Icon = cat ? getCategoryIcon(cat.icon_key) : getCategoryIcon(selectedTransaction.category);
                                         return <Icon size={32} color="white" />;
                                     })()}
                                 </div>
-                                <div className={`detail-amount ${selectedTransaction.type}`}>
-                                    {selectedTransaction.type === 'income' ? '+' : '-'}{formatAmount(selectedTransaction.amount)}
+                                <div className={`detail-amount ${selectedTransaction.payment_type === 'transfer' ? 'transfer' : selectedTransaction.type}`}>
+                                    {selectedTransaction.payment_type === 'transfer' ? '⇄ ' : (selectedTransaction.type === 'income' ? '+' : '-')}{formatAmount(selectedTransaction.amount)}
                                 </div>
                                 <div className="detail-date">
                                     {new Date(selectedTransaction.date).toLocaleDateString(language, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
@@ -664,7 +680,11 @@ const Transactions = ({ limit, showControls = true }) => {
                                 </div>
                                 <div className="detail-row">
                                     <span className="label">{t('accounts.typeLabel')}</span>
-                                    <span className="value capitalize">{t(`dashboard.${selectedTransaction.type === 'income' ? 'income' : 'expenses'}`) || selectedTransaction.type}</span>
+                                    <span className="value capitalize">
+                                        {selectedTransaction.payment_type === 'transfer' 
+                                            ? t('addTransaction.transfer')
+                                            : (t(`dashboard.${selectedTransaction.type === 'income' ? 'income' : 'expenses'}`) || selectedTransaction.type)}
+                                    </span>
                                 </div>
                                 <div className="detail-row">
                                     <span className="label">{t('addTransaction.frequency')}</span>
@@ -682,12 +702,43 @@ const Transactions = ({ limit, showControls = true }) => {
                                         )}
                                     </span>
                                 </div>
-                                <div className="detail-row">
-                                    <span className="label">{t('common.account') || 'Account'}</span>
-                                    <span className="value">
-                                        {accounts.find(a => a.id === selectedTransaction.accountId)?.name || 'Unknown Account'}
-                                    </span>
-                                </div>
+                                {selectedTransaction.payment_type === 'transfer' ? (
+                                    <>
+                                        <div className="detail-row">
+                                            <span className="label">{t('addTransaction.fromAccount')}</span>
+                                            <span className="value">
+                                                {(() => {
+                                                    const twin = allTransactions.find(t => 
+                                                        t.payment_type === 'transfer' && 
+                                                        (t.parent_transaction_id === selectedTransaction.id || selectedTransaction.parent_transaction_id === t.id)
+                                                    );
+                                                    const fromId = selectedTransaction.type === 'expense' ? selectedTransaction.accountId : twin?.accountId;
+                                                    return accounts.find(a => a.id === fromId)?.name || '...';
+                                                })()}
+                                            </span>
+                                        </div>
+                                        <div className="detail-row">
+                                            <span className="label">{t('addTransaction.toAccount')}</span>
+                                            <span className="value">
+                                                {(() => {
+                                                    const twin = allTransactions.find(t => 
+                                                        t.payment_type === 'transfer' && 
+                                                        (t.parent_transaction_id === selectedTransaction.id || selectedTransaction.parent_transaction_id === t.id)
+                                                    );
+                                                    const toId = selectedTransaction.type === 'income' ? selectedTransaction.accountId : twin?.accountId;
+                                                    return accounts.find(a => a.id === toId)?.name || '...';
+                                                })()}
+                                            </span>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="detail-row">
+                                        <span className="label">{t('common.account') || 'Account'}</span>
+                                        <span className="value">
+                                            {accounts.find(a => a.id === selectedTransaction.accountId)?.name || 'Unknown Account'}
+                                        </span>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="detail-actions">
@@ -1218,6 +1269,10 @@ const Transactions = ({ limit, showControls = true }) => {
                     color: var(--text-main); /* or muted */
                 }
 
+                .amount.transfer {
+                    color: var(--text-muted);
+                }
+
                 .tx-actions {
                     position: absolute;
                     right: 16px;
@@ -1462,6 +1517,7 @@ const Transactions = ({ limit, showControls = true }) => {
                 }
                 .detail-amount.income { color: var(--color-success); }
                 .detail-amount.expense { color: var(--text-main); }
+                .detail-amount.transfer { color: var(--text-muted); }
 
                 .detail-date {
                     color: var(--text-muted);

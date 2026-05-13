@@ -108,7 +108,11 @@ export const translations = {
             total: 'Total Split',
             perWeek: '/ week',
             perMonth: '/ month',
-            perYear: '/ year'
+            perYear: '/ year',
+            transfer: "Transfer",
+            selectAccount: "Select Account",
+            fromAccount: "From Account",
+            toAccount: "To Account"
         },
         currencies: {
             USD: "United States Dollar",
@@ -322,7 +326,15 @@ export const translations = {
             monthly: 'Mensual',
             yearly: 'Anual',
             unit: 'Precio Unitario',
-            total: 'Total Dividido'
+            total: 'Total Dividido',
+            pricingMode: 'Precios',
+            perWeek: '/ semana',
+            perMonth: '/ mes',
+            perYear: '/ año',
+            transfer: "Transferencia",
+            selectAccount: "Seleccionar Cuenta",
+            fromAccount: "Desde Cuenta",
+            toAccount: "A Cuenta"
         },
         currencies: {
             USD: "Dólar Estadounidense",
@@ -535,7 +547,15 @@ export const translations = {
             monthly: 'Mensal',
             yearly: 'Anual',
             unit: 'Preço Unitário',
-            total: 'Valor Total'
+            total: 'Valor Total',
+            pricingMode: 'Preços',
+            perWeek: '/ semana',
+            perMonth: '/ mês',
+            perYear: '/ ano',
+            transfer: "Transferência",
+            selectAccount: "Selecionar Conta",
+            fromAccount: "De Conta",
+            toAccount: "Para Conta"
         },
         currencies: {
             USD: "Dólar Americano",
@@ -751,7 +771,10 @@ export const translations = {
             perWeek: '/ hafta',
             perMonth: '/ ay',
             perYear: '/ yıl',
-            expense: 'Gider'
+            transfer: "Transfer",
+            selectAccount: "Hesap Seçin",
+            fromAccount: "Gönderen Hesap",
+            toAccount: "Alıcı Hesap"
         },
         currencies: {
             USD: "Amerikan Doları",
